@@ -11,7 +11,7 @@ defmodule ExSecrets.Providers.DotEnv do
 
   defp read_env() do
     with {:ok, s} <- File.read(".env"),
-         [_ | _] = envs <- String.split(s, "\n", trim: true) do
+         [_ | _] = envs <- String.split(s,  ~r{(\r\n|\r|\n|\\n)}, trim: true) do
       Enum.each(envs, &put_env/1)
     else
       _ -> raise(raise(ExSecrets.Exceptions.InvalidConfiguration, ".env is not found"))
