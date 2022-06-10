@@ -3,12 +3,12 @@ defmodule ExSecrets do
   alias ExSecrets.Providers.{Resolver, SystemEnv}
 
   def get(key) do
-    with value when not is_nil(value) <- Cache.get(key) do
-      value
-    else
-      nil ->
-        Cache.pass_by(key, SystemEnv.get(key))
+    case Application.get_env(:ex_secrets, :provider) do
+      provider when is_atom(provider) -> get(key, provider)
+      _ -> get_default(key)
     end
+
+
   end
 
   def get(key, provider) do
@@ -26,6 +26,15 @@ defmodule ExSecrets do
       value
     else
       _ -> nil
+    end
+  end
+
+  def get_default(key) do
+    with value when not is_nil(value) <- Cache.get(key) do
+      value
+    else
+      nil ->
+        Cache.pass_by(key, SystemEnv.get(key))
     end
   end
 end

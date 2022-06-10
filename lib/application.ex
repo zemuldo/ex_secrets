@@ -32,7 +32,7 @@ defmodule ExSecrets.Application do
   end
 
   defp get_providers_env() do
-    case Application.get_env(:ex_secrets, :providers, []) do
+    case Application.get_env(:ex_secrets, :provider, []) do
       provider when is_atom(provider) -> [provider]
       providers when is_list(providers) -> providers
       nil -> []
