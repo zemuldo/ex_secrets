@@ -2,7 +2,7 @@ defmodule ExSecrets.ApplicationTestsInvalidConfig do
   use ExUnit.Case
 
   setup do
-    Application.put_env(:ex_secrets, :providers, :wrong)
+    Application.put_env(:ex_secrets, :providers, "wrong")
   end
 
   test "test" do
@@ -40,7 +40,19 @@ defmodule ExSecrets.ApplicationTestsDefaultProvider do
   end
 end
 
-defmodule ExSecrets.ApplicationTestsUserProvider do
+defmodule ExSecrets.ApplicationTestsUserSingleProvider do
+  use ExUnit.Case
+
+  setup do
+    Application.put_env(:ex_secrets, :providers, :dot_env)
+  end
+
+  test "test" do
+    assert ExSecrets.Providers.DotEnv in ExSecrets.Application.get_providers()
+  end
+end
+
+defmodule ExSecrets.ApplicationTestsUserManyProviders do
   use ExUnit.Case
 
   setup do
