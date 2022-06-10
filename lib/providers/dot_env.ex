@@ -21,6 +21,6 @@ defmodule ExSecrets.Providers.DotEnv do
   defp put_env(s) do
     [k, v] = String.split(s, "=", trim: true)
 
-    Cache.save(k, v) |> IO.inspect()
+    Cache.save(k, v)
   end
 end
