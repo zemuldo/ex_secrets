@@ -19,7 +19,9 @@ defmodule ExSecrets.Providers.DotEnv do
   end
 
   defp put_env(s) do
-    [k, v] = String.split(s, "=", trim: true)
+    [k | rest] = String.split(s, "=", trim: true)
+
+    v = Enum.join(rest, "=")
 
     Cache.save(k, v)
   end
