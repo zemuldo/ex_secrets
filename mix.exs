@@ -14,6 +14,7 @@ defmodule ExSecrets.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {ExSecrets.Application, []},
       extra_applications: [:logger]
     ]
   end
