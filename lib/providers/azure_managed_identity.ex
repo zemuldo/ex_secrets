@@ -71,7 +71,8 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
 
   defp get_secret_call(name, access_token) do
     client = http_adpater()
-    key_vault_name = Config.provider_config_value(:azure_managed_identity, :key_vault_name)
+    IO.inspect(Application.get_env(:ex_secrets, :providers))
+    key_vault_name = Config.provider_config_value(:azure_managed_identity, :key_vault_name) |> IO.inspect()
 
     with {:ok, %{body: body, status_code: 200}} <-
            client.get(

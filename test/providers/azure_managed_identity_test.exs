@@ -10,10 +10,7 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
 
   setup do
     Application.put_env(:ex_secrets, :providers, %{
-      azure_key_vault: %{
-        tenant_id: "tenant-id",
-        client_id: "client-id",
-        client_secret: "client-secret",
+      azure_managed_identity: %{
         key_vault_name: "key-vault-name"
       }
     })
@@ -29,50 +26,25 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
     AzureManagedIdentityHTTPAdapterMock
     |> expect(
       :get,
-      fn url, _ ->
-        case url do
-          "http://169.254.169.254" <> _ ->
-            {:ok,
-             %HTTPoison.Response{
-               body:
-                 "{\"token_type\":\"Bearer\",\"expires_in\":3599,\"ext_expires_in\":3599,\"access_token\":\"dummy_access_token\"}",
-               request_url:
-                 "https://login.microsoftonline.com/9fb676fa-7f2c-4b77-9de7-9b9d1b56db3f/oauth2/v2.0/token",
-               status_code: 200
-             }}
-
-          "https://key-vault-name.vault.azure.ne" <> _ ->
-            {:ok,
-             %HTTPoison.Response{
-               body: "{\"value\":\"DOTXYZHASH\"}",
-               status_code: 200
-             }}
-        end
+      fn "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net",
+         _ ->
+        {:ok,
+         %HTTPoison.Response{
+           body:
+             "{\"token_type\":\"Bearer\",\"expires_in\":3599,\"ext_expires_in\":3599,\"access_token\":\"dummy_access_token\"}",
+           request_url:
+             "https://login.microsoftonline.com/9fb676fa-7f2c-4b77-9de7-9b9d1b56db3f/oauth2/v2.0/token",
+           status_code: 200
+         }}
       end
     )
-    |> expect(
-      :get,
-      fn url, _ ->
-        case url do
-          "http://169.254.169.254" <> _ ->
-            {:ok,
-             %HTTPoison.Response{
-               body:
-                 "{\"token_type\":\"Bearer\",\"expires_in\":3599,\"ext_expires_in\":3599,\"access_token\":\"dummy_access_token\"}",
-               request_url:
-                 "https://login.microsoftonline.com/9fb676fa-7f2c-4b77-9de7-9b9d1b56db3f/oauth2/v2.0/token",
-               status_code: 200
-             }}
-
-          "https://key-vault-name.vault.azure.ne" <> _ ->
-            {:ok,
-             %HTTPoison.Response{
-               body: "{\"value\":\"DOTXYZHASH\"}",
-               status_code: 200
-             }}
-        end
-      end
-    )
+    |> expect(:get, fn "https://key-vault-name.vault.azure.net/secrets/ABC?api-version=2016-10-01", _ ->
+      {:ok,
+       %HTTPoison.Response{
+         body: "{\"value\":\"DOTXYZHASH\"}",
+         status_code: 200
+       }}
+    end)
 
     {:ok, _} = GenServer.start(AzureManagedIdentity, [], name: AzureManagedIdentity)
 
