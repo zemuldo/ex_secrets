@@ -40,10 +40,7 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
          }}
       end
     )
-    |> expect(:get, fn url, _ ->
-      assert url ==
-               "https://key-vault-name.vault.azure.net/secrets/ABC?api-version=2016-10-01"
-
+    |> expect(:get, fn "https://key-vault-name.vault.azure.net/secrets/ABC?api-version=2016-10-01", _ ->
       {:ok,
        %HTTPoison.Response{
          body: "{\"value\":\"DOTXYZHASH\"}",
