@@ -1,4 +1,4 @@
-defmodule ExSecrets.Providers.AwsSecretsManager do
+defmodule ExSecrets.Providers.Mix do
   use ExSecrets.Providers.Base
 
   def init(_) do
@@ -6,6 +6,6 @@ defmodule ExSecrets.Providers.AwsSecretsManager do
   end
 
   def process_name() do
-    :ex_secrets_aws_secrets_manager
+    :ex_secrets_mix
   end
 end

@@ -4,11 +4,11 @@ defmodule ExSecrets.Providers.Base do
       use GenServer
 
       def start_link(default) when is_list(default) do
-        GenServer.start_link(get_name(default), default)
+        GenServer.start_link(__MODULE__, [], name: get_name(default))
       end
 
       defp get_name(opts) do
-        opts[:name] || __MODULE__
+        __MODULE__.process_name()
       end
     end
   end

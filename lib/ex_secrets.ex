@@ -3,12 +3,10 @@ defmodule ExSecrets do
   alias ExSecrets.Providers.{Resolver, SystemEnv}
 
   def get(key) do
-    case Application.get_env(:ex_secrets, :provider) do
+    case get_default_prider() do
       provider when is_atom(provider) -> get(key, provider)
       _ -> get_default(key)
     end
-
-
   end
 
   def get(key, provider) do
@@ -35,6 +33,20 @@ defmodule ExSecrets do
     else
       nil ->
         Cache.pass_by(key, SystemEnv.get(key))
+    end
+  end
+
+  def get_default_prider() do
+    Application.get_env(:ex_secrets, :default_provider, get_any_provider())
+  end
+
+  defp get_any_provider() do
+    with providers when is_map(providers) <-
+           Application.get_env(:ex_secrets, :providers, %{}),
+         provider <- Map.keys(providers) |> Kernel.++([:system_env]) |> Enum.at(0) do
+      provider
+    else
+      _ -> raise(ExSecrets.Exceptions.InvalidConfiguration)
     end
   end
 end

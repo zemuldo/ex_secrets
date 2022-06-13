@@ -1,6 +1,7 @@
 defmodule ExSecrets.Providers.DotEnv do
   use ExSecrets.Providers.Base
   alias ExSecrets.Cache
+  alias ExSecrets.Providers.Config
 
   def get(key), do: Cache.get(key)
 
@@ -10,8 +11,10 @@ defmodule ExSecrets.Providers.DotEnv do
   end
 
   defp read_env() do
-    with {:ok, s} <- File.read(".env"),
-         [_ | _] = envs <- String.split(s,  ~r{(\r\n|\r|\n|\\n)}, trim: true) do
+    path = Config.provider_config_value(:dot_env, :path)
+
+    with {:ok, s} <- File.read(path),
+         [_ | _] = envs <- String.split(s, ~r{(\r\n|\r|\n|\\n)}, trim: true) do
       Enum.each(envs, &put_env/1)
     else
       _ -> raise(raise(ExSecrets.Exceptions.InvalidConfiguration, ".env is not found"))
@@ -24,5 +27,9 @@ defmodule ExSecrets.Providers.DotEnv do
     v = Enum.join(rest, "=")
 
     Cache.save(k, v)
+  end
+
+  def process_name() do
+    :ex_secrets_dot_env
   end
 end

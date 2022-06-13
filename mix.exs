@@ -22,7 +22,10 @@ defmodule ExSecrets.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:httpoison, "~> 1.8"},
+      {:poison, "~> 5.0"},
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 end
