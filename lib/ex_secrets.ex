@@ -18,6 +18,18 @@ defmodule ExSecrets do
     end
   end
 
+  def get(key, provider, default) do
+    with value when not is_nil(value) <- Cache.get(key) do
+      value
+    else
+      nil ->
+        case   Cache.pass_by(key, get_using_provider(key, provider)) do
+          nil -> default
+          value -> value
+        end
+    end
+  end
+
   defp get_using_provider(key, provider) do
     with provider when is_atom(provider) <- Resolver.call(provider),
          value <- Kernel.apply(provider, :get, [key]) do
