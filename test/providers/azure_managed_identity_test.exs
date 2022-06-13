@@ -2,7 +2,7 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
   use ExUnit.Case
 
   alias ExSecrets.Providers.AzureManagedIdentity
-  alias ExSecrets.HTTPAdapterMock
+  alias ExSecrets.AzureManagedIdentityHTTPAdapterMock
   doctest ExSecrets
 
   import Mox
@@ -18,17 +18,18 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
       }
     })
 
-    Application.put_env(:ex_secrets, :http_adapter, HTTPAdapterMock)
+    Application.put_env(:ex_secrets, :http_adapter, AzureManagedIdentityHTTPAdapterMock)
     on_exit(fn -> Application.delete_env(:ex_secrets, :providers) end)
+    Mox.defmock(ExSecrets.AzureManagedIdentityHTTPAdapterMock, for: ExSecrets.HTTPAdapterBehavior)
 
     {:ok, %{}}
   end
 
   test "Get Secret Azure Managed Identity" do
-    HTTPAdapterMock
+    AzureManagedIdentityHTTPAdapterMock
     |> expect(
       :get,
-      fn "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net",
+      fn "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net",
          _ ->
         {:ok,
          %HTTPoison.Response{
