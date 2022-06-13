@@ -43,7 +43,7 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
 
   defp token_uri() do
     "http://169.254.169.254/metadata/identity/oauth2/token"
-    |> Kernel.<>("?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net")
+    |> Kernel.<>("?api-version=2018-02-01&resource=https://vault.azure.net")
   end
 
   defp get_secret(
@@ -71,7 +71,8 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
 
   defp get_secret_call(name, access_token) do
     client = http_adpater()
-    key_vault_name = Config.provider_config_value(:azure_managed_identity, :key_vault_name)
+    IO.inspect(Application.get_env(:ex_secrets, :providers))
+    key_vault_name = Config.provider_config_value(:azure_managed_identity, :key_vault_name) |> IO.inspect()
 
     with {:ok, %{body: body, status_code: 200}} <-
            client.get(

@@ -2,7 +2,7 @@ defmodule ExSecrets.Providers.AzureKeyVaultTest do
   use ExUnit.Case
 
   alias ExSecrets.Providers.AzureKeyVault
-  alias ExSecrets.HTTPAdapterMock
+  alias ExSecrets.AzureKeyVaultHTTPAdapterMock
   doctest ExSecrets
 
   import Mox
@@ -19,13 +19,14 @@ defmodule ExSecrets.Providers.AzureKeyVaultTest do
       }
     })
 
-    Application.put_env(:ex_secrets, :http_adapter, HTTPAdapterMock)
+    Application.put_env(:ex_secrets, :http_adapter, AzureKeyVaultHTTPAdapterMock)
     on_exit(fn -> Application.delete_env(:ex_secrets, :providers) end)
+    Mox.defmock(ExSecrets.AzureKeyVaultHTTPAdapterMock, for: ExSecrets.HTTPAdapterBehavior)
     {:ok, %{}}
   end
 
   test "Get Secret from Azure KV" do
-    HTTPAdapterMock
+    AzureKeyVaultHTTPAdapterMock
     |> expect(:post, fn url, body, _ ->
       assert url == "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token"
 
