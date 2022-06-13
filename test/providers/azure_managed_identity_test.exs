@@ -28,7 +28,7 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
     HTTPAdapterMock
     |> expect(
       :get,
-      fn _,
+      fn "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net",
          _ ->
         {:ok,
          %HTTPoison.Response{
@@ -40,7 +40,7 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
          }}
       end
     )
-    |> expect(:get, fn _, _ ->
+    |> expect(:get, fn "https://key-vault-name.vault.azure.net/secrets/ABC?api-version=2016-10-01", _ ->
       {:ok,
        %HTTPoison.Response{
          body: "{\"value\":\"DOTXYZHASH\"}",
