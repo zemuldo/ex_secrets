@@ -29,7 +29,7 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
     AzureManagedIdentityHTTPAdapterMock
     |> expect(
       :get,
-      fn "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net",
+      fn "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net",
          _ ->
         {:ok,
          %HTTPoison.Response{

@@ -43,7 +43,7 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
 
   defp token_uri() do
     "http://169.254.169.254/metadata/identity/oauth2/token"
-    |> Kernel.<>("?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net")
+    |> Kernel.<>("?api-version=2018-02-01&resource=https://vault.azure.net")
   end
 
   defp get_secret(
