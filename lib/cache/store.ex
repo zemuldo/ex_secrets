@@ -10,20 +10,21 @@ defmodule ExSecrets.Cache.Store do
   @impl true
   def init(_) do
     table = :ets.new(:ex_secrets_ets_table, [:set, read_concurrency: true])
-    {:ok, %{table: table}}
+    {:ok, %{table: table, master_key: :crypto.strong_rand_bytes(16)}}
   end
 
   @impl true
-  def handle_call({:get, key}, _from, %{table: table} = state) do
+  def handle_call({:get, key}, _from, %{table: table, master_key: master_key} = state) do
     case :ets.lookup(table, key) do
-      [{_, value}] -> {:reply, value, state}
+      [{_, value}] -> {:reply, decrypt(value, master_key), state}
       _ -> {:reply, nil, state}
     end
   end
 
   @impl true
-  def handle_call({:save, key, value}, _from, %{table: table} = state) do
-    true = :ets.insert(table, {key, value})
+  def handle_call({:save, key, value}, _from, %{table: table, master_key: master_key} = state) do
+    encrypted_value = encrypt(value, master_key)
+    true = :ets.insert(table, {key, encrypted_value})
     {:reply, value, state}
   end
 
@@ -43,5 +44,17 @@ defmodule ExSecrets.Cache.Store do
       _ ->
         GenServer.call(@store_name, {:save, key, value})
     end
+  end
+
+  defp encrypt(plaintext, key) do
+    iv = :crypto.strong_rand_bytes(16)
+    ciphertext = :crypto.crypto_one_time(:aes_128_ctr, key, iv, plaintext, true)
+    iv <> ciphertext
+  end
+
+  defp decrypt(ciphertext, key) do
+    <<iv::binary-16, ciphertext::binary>> = ciphertext
+
+    :crypto.crypto_one_time(:aes_128_ctr, key, iv, ciphertext, false)
   end
 end
