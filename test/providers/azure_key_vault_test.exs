@@ -69,5 +69,6 @@ defmodule ExSecrets.Providers.AzureKeyVaultTest do
     {:ok, _} = GenServer.start(AzureKeyVault, [], name: AzureKeyVault)
 
     assert ExSecrets.get("ABC", :azure_key_vault) == "DOTXYZHASH"
+    assert ExSecrets.get("ABC", :azure_key_vault) == "DOTXYZHASH"
   end
 end

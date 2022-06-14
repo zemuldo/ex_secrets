@@ -31,6 +31,7 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
     {:ok, _} = GenServer.start(AzureManagedIdentity, [], name: AzureManagedIdentity)
 
     assert ExSecrets.get("ABC", :azure_managed_identity) == "DOTXYZHASH"
+    assert ExSecrets.get("ABC", :azure_managed_identity) == "DOTXYZHASH"
   end
 
   defp api_mock(url, _) do
