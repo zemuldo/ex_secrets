@@ -1,6 +1,8 @@
 defmodule ExSecrets do
   alias ExSecrets.Cache
-  alias ExSecrets.Providers.{Resolver, SystemEnv}
+  alias ExSecrets.Providers.SystemEnv
+  alias ExSecrets.Utils.Resolver
+  alias ExSecrets.Utils.SecretFetchLimiter
 
   def get(key) do
     case get_default_prider() do
@@ -14,7 +16,7 @@ defmodule ExSecrets do
       value
     else
       nil ->
-        Cache.pass_by(key, get_using_provider(key, provider))
+        Cache.pass_by(key, SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider]))
     end
   end
 
@@ -23,14 +25,14 @@ defmodule ExSecrets do
       value
     else
       nil ->
-        case   Cache.pass_by(key, get_using_provider(key, provider)) do
+        case Cache.pass_by(key, SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider])) do
           nil -> default
           value -> value
         end
     end
   end
 
-  defp get_using_provider(key, provider) do
+  def get_using_provider(key, provider) do
     with provider when is_atom(provider) <- Resolver.call(provider),
          value <- Kernel.apply(provider, :get, [key]) do
       value

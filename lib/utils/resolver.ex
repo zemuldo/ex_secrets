@@ -1,4 +1,4 @@
-defmodule ExSecrets.Providers.Resolver do
+defmodule ExSecrets.Utils.Resolver do
   def call(:system_env), do: ExSecrets.Providers.SystemEnv
   def call(:dot_env), do: ExSecrets.Providers.DotEnv
   def call(:azure_managed_identity), do: ExSecrets.Providers.AzureManagedIdentity

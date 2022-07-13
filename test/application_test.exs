@@ -1,5 +1,5 @@
 defmodule ExSecrets.ApplicationTestsInvalidConfig do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   setup do
     Application.put_env(:ex_secrets, :providers, "wrong")
@@ -14,7 +14,7 @@ defmodule ExSecrets.ApplicationTestsInvalidConfig do
 end
 
 defmodule ExSecrets.ApplicationTestsUnknowProvider do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   setup do
     Application.put_env(:ex_secrets, :providers, %{xyz: %{path: "xyz"}})
@@ -29,7 +29,7 @@ defmodule ExSecrets.ApplicationTestsUnknowProvider do
 end
 
 defmodule ExSecrets.ApplicationTestsDefaultProvider do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   setup do
     Application.put_env(:ex_secrets, :providers, %{system_env: %{path: "system_env"}})
@@ -44,7 +44,7 @@ defmodule ExSecrets.ApplicationTestsDefaultProvider do
 end
 
 defmodule ExSecrets.ApplicationTestsUserSingleProvider do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   setup do
     Application.put_env(:ex_secrets, :providers, %{
@@ -60,7 +60,7 @@ defmodule ExSecrets.ApplicationTestsUserSingleProvider do
 end
 
 defmodule ExSecrets.ApplicationTestsUserManyProviders do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   setup do
     Application.put_env(:ex_secrets, :providers, %{dot_env: %{}})

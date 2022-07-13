@@ -6,7 +6,6 @@ defmodule ExSecrets.Providers.AzureKeyVaultTest do
   doctest ExSecrets
 
   import Mox
-
   setup :set_mox_global
 
   setup do
@@ -22,53 +21,85 @@ defmodule ExSecrets.Providers.AzureKeyVaultTest do
     Application.put_env(:ex_secrets, :http_adapter, AzureKeyVaultHTTPAdapterMock)
     on_exit(fn -> Application.delete_env(:ex_secrets, :providers) end)
     Mox.defmock(ExSecrets.AzureKeyVaultHTTPAdapterMock, for: ExSecrets.HTTPAdapterBehavior)
+
     {:ok, %{}}
   end
 
-  test "Get Secret from Azure KV" do
+  test "Get Secret Azure Key Vault with and without cache" do
+     AzureKeyVaultHTTPAdapterMock
+    # Token API Call - 2
+    |> expect(:post, &get_token_mock/3)
+    |> expect(:post, &get_token_mock/3)
+    # Secret API Calls - 2
+    |> expect(:get, &get_secret_mock/2)
+    |> expect(:get, &get_secret_mock/2)
+
+    assert ExSecrets.get("ABC-1", :azure_key_vault) == "VAL"
+    assert ExSecrets.get("ABC-2", :azure_key_vault) == "VAL"
+    assert ExSecrets.get("ABC-2", :azure_key_vault) == "VAL"
+
     AzureKeyVaultHTTPAdapterMock
-    |> expect(:post, fn url, body, _ ->
-      assert url == "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token"
+    # Token API Call
+    |> expect(:post, &get_token_mock/3)
+    # Secret API Call
+    |> expect(:get, &get_secret_mock/2)
+    # Secret API Call
+    |> expect(:get, &get_secret_mock/2)
+    # Secret API Call
+    |> expect(:get, &get_secret_mock/2)
+    # Calls that can increase cost: Limited to
+    |> expect(:get, &get_secret_mock/2)
+    |> expect(:get, &get_secret_mock/2)
+    |> expect(:get, &get_secret_mock/2)
+    |> expect(:get, &get_secret_mock/2)
+    |> expect(:get, &get_secret_mock/2)
 
-      assert body ==
-               "client_id=client-id&client_secret=client-secret&grant_type=client_credentials&scope=https%3A%2F%2Fvault.azure.net%2F.default"
+    {:ok, _} = AzureKeyVault.start_link([])
 
-      {:ok,
-       %HTTPoison.Response{
-         body:
-           "{\"token_type\":\"Bearer\",\"expires_in\":3599,\"ext_expires_in\":3599,\"access_token\":\"dummy_access_token\"}",
-         request_url: "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token",
-         status_code: 200
-       }}
-    end)
-    |> expect(:post, fn url, body, _ ->
-      assert url == "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token"
+    # 1st call to get secret - API
+    assert ExSecrets.get("KEY-1", :azure_key_vault) == "VAL"
+    # 2nd call to get secret - Cache
+    assert ExSecrets.get("KEY-1", :azure_key_vault) == "VAL"
+    # 3rd call to get secret - API
+    assert ExSecrets.get("KEY-2", :azure_key_vault) == "VAL"
+    # 4th call to get secret - API
+    assert ExSecrets.get("KEY-3", :azure_key_vault) == "VAL"
 
-      assert body ==
-               "client_id=client-id&client_secret=client-secret&grant_type=client_credentials&scope=https%3A%2F%2Fvault.azure.net%2F.default"
+    # 5th call to get secret - API
+    Application.put_env(:ex_secrets, :on_secret_fetch_limit_reached, :raise)
+    Application.put_env(:ex_secrets, :secret_fetch_limit, 4)
 
-      {:ok,
-       %HTTPoison.Response{
-         body:
-           "{\"token_type\":\"Bearer\",\"expires_in\":3599,\"ext_expires_in\":3599,\"access_token\":\"dummy_access_token\"}",
-         request_url: "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token",
-         status_code: 200
-       }}
-    end)
-    |> expect(:get, fn url, _ ->
-      assert url ==
-               "https://key-vault-name.vault.azure.net/secrets/ABC?api-version=2016-10-01"
+    # 4 calls with nil
+    assert ExSecrets.get("NULL", :azure_key_vault) == nil
+    assert ExSecrets.get("NULL", :azure_key_vault) == nil
+    assert ExSecrets.get("NULL", :azure_key_vault) == nil
+    assert ExSecrets.get("NULL", :azure_key_vault) == nil
+    assert ExSecrets.get("NULL", :azure_key_vault) == nil
 
-      {:ok,
-       %HTTPoison.Response{
-         body: "{\"value\":\"DOTXYZHASH\"}",
-         status_code: 200
-       }}
-    end)
+    assert_raise RuntimeError, ~r/^Fetch secret NULL reached limit 4/, fn ->
+      assert ExSecrets.get("NULL", :azure_key_vault) == nil
+    end
 
-    {:ok, _} = GenServer.start(AzureKeyVault, [], name: AzureKeyVault)
+    assert_raise RuntimeError, ~r/^Fetch secret NULL reached limit 4/, fn ->
+      assert ExSecrets.get("NULL", :azure_key_vault) == nil
+    end
 
-    assert ExSecrets.get("ABC", :azure_key_vault) == "DOTXYZHASH"
-    assert ExSecrets.get("ABC", :azure_key_vault) == "DOTXYZHASH"
+    verify!(AzureKeyVaultHTTPAdapterMock)
+  end
+
+  defp get_token_mock(_url, _, _) do
+    {:ok,
+     %HTTPoison.Response{
+       body: "{\"expires_in\":3599,\"ext_expires_in\":3599,\"access_token\":\"dummy\"}",
+       request_url: "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token",
+       status_code: 200
+     }}
+  end
+
+  defp get_secret_mock(url, _data) do
+    case String.contains?(url, "NULL") do
+      true -> {:ok, %HTTPoison.Response{body: "{}", status_code: 200}}
+      false -> {:ok, %HTTPoison.Response{body: "{\"value\":\"VAL\"}", status_code: 200}}
+    end
   end
 end

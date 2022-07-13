@@ -1,4 +1,4 @@
-defmodule ExSecrets.Providers.Config do
+defmodule ExSecrets.Utils.Config do
   def provider_config_value(provider, key) do
     provider
     |> provider_env()

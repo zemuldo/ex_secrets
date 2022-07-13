@@ -1,5 +1,5 @@
 defmodule ExSecretsTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case
   doctest ExSecrets
 
   test "Get FOO - nil" do

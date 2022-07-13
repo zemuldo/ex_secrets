@@ -1,13 +1,14 @@
 defmodule ExSecrets.Providers.AzureKeyVault do
   use ExSecrets.Providers.Base
 
-  alias ExSecrets.Providers.Config
+  alias ExSecrets.Utils.Config
 
   @moduledoc """
   Azure Key Vault provider provides secrets from an Azure Key Vault through a rest API.
   """
 
   @headers %{"Content-Type" => "application/x-www-form-urlencoded"}
+  @process_name  :ex_secrets_azure_key_vault
 
   def init(_) do
     case get_access_token() do
@@ -23,8 +24,8 @@ defmodule ExSecrets.Providers.AzureKeyVault do
     name = name |> String.split("_") |> Enum.join("-")
 
     with process when not is_nil(process) <-
-           GenServer.whereis(process_name()) do
-      GenServer.call(process_name(), {:get, name})
+           GenServer.whereis(@process_name) do
+      GenServer.call(@process_name, {:get, name})
     else
       nil ->
         case get_secret(name, %{}, nil) do
@@ -51,7 +52,7 @@ defmodule ExSecrets.Providers.AzureKeyVault do
            state,
          current_time
        )
-       when issued_at + expires_in - current_time > 3500 do
+       when (issued_at + expires_in) - current_time > 5 do
     with {:ok, value} <- get_secret_call(name, access_token) do
       {:ok, value, state}
     else
@@ -104,7 +105,7 @@ defmodule ExSecrets.Providers.AzureKeyVault do
            |> token_uri()
            |> client.post(req_body, @headers),
          {:ok, data} <- Poison.decode(body) do
-      {:ok, data}
+      {:ok, data |> Map.put("issued_at", get_current_epoch())}
     else
       _ ->
         {:error, "Failed to get access token"}
@@ -120,6 +121,7 @@ defmodule ExSecrets.Providers.AzureKeyVault do
   end
 
   def process_name() do
-    :ex_secrets_azure_keyvault
+
+    @process_name
   end
 end

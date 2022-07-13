@@ -1,18 +1,19 @@
 defmodule ExSecrets.Providers.AzureManagedIdentity do
   use ExSecrets.Providers.Base
 
-  alias ExSecrets.Providers.Config
+  alias ExSecrets.Utils.Config
 
   @moduledoc """
   Azure Key Vault provider provides secrets from an Azure Key Vault through a rest API.
   """
 
   @headers %{"Content-Type" => "application/x-www-form-urlencoded", "Metadata" => "true"}
+  @process_name  :ex_secrets_azure_managed_identity
 
   def init(_) do
     case get_access_token() do
       {:ok, data} ->
-        {:ok, data}
+        {:ok, data |> Map.put("issued_at", get_current_epoch())}
 
       _ ->
         {:ok, %{}}
@@ -23,8 +24,8 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
     name = name |> String.split("_") |> Enum.join("-")
 
     with process when not is_nil(process) <-
-           GenServer.whereis(process_name()) do
-      GenServer.call(process_name(), {:get, name})
+           GenServer.whereis( @process_name) do
+      GenServer.call( @process_name, {:get, name})
     else
       nil ->
         case get_secret(name, %{}, nil) do
@@ -52,7 +53,7 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
            state,
          current_time
        )
-       when issued_at + expires_in - current_time > 3500 do
+       when (issued_at + expires_in) - current_time > 5 do
     with {:ok, value} <- get_secret_call(name, access_token) do
       {:ok, value, state}
     else
@@ -63,7 +64,7 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
   defp get_secret(name, state, _) do
     with {:ok, %{"access_token" => access_token} = new_state} <- get_access_token(),
          {:ok, value} <- get_secret_call(name, access_token) do
-      {:ok, value, state |> Map.merge(new_state) |> Map.put("issued_at", get_current_epoch())}
+      {:ok, value, state |> Map.merge(new_state)}
     else
       _ -> {:error, "Failed to get secret"}
     end
@@ -92,7 +93,7 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
            token_uri()
            |> client.get(@headers),
          {:ok, data} <- Poison.decode(body) do
-      {:ok, data}
+      {:ok, data |> Map.put("issued_at", get_current_epoch())}
     else
       _ ->
         {:error, "Failed to get access token"}
@@ -100,7 +101,7 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
   end
 
   defp get_current_epoch() do
-    DateTime.utc_now() |> DateTime.to_unix()
+    System.system_time(:second)
   end
 
   defp http_adpater() do
@@ -108,6 +109,6 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
   end
 
   def process_name() do
-    :ex_secrets_azure_managed_identity
+    @process_name
   end
 end
