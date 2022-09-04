@@ -8,7 +8,7 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
   """
 
   @headers %{"Content-Type" => "application/x-www-form-urlencoded", "Metadata" => "true"}
-  @process_name  :ex_secrets_azure_managed_identity
+  @process_name :ex_secrets_azure_managed_identity
 
   def init(_) do
     case get_access_token() do
@@ -24,8 +24,8 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
     name = name |> String.split("_") |> Enum.join("-")
 
     with process when not is_nil(process) <-
-           GenServer.whereis( @process_name) do
-      GenServer.call( @process_name, {:get, name})
+           GenServer.whereis(@process_name) do
+      GenServer.call(@process_name, {:get, name})
     else
       nil ->
         case get_secret(name, %{}, nil) do
@@ -53,7 +53,7 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
            state,
          current_time
        )
-       when (issued_at + expires_in) - current_time > 5 do
+       when issued_at + expires_in - current_time > 5 do
     with {:ok, value} <- get_secret_call(name, access_token) do
       {:ok, value, state}
     else

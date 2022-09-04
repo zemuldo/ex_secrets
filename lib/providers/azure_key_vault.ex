@@ -8,7 +8,7 @@ defmodule ExSecrets.Providers.AzureKeyVault do
   """
 
   @headers %{"Content-Type" => "application/x-www-form-urlencoded"}
-  @process_name  :ex_secrets_azure_key_vault
+  @process_name :ex_secrets_azure_key_vault
 
   def init(_) do
     case get_access_token() do
@@ -52,7 +52,7 @@ defmodule ExSecrets.Providers.AzureKeyVault do
            state,
          current_time
        )
-       when (issued_at + expires_in) - current_time > 5 do
+       when issued_at + expires_in - current_time > 5 do
     with {:ok, value} <- get_secret_call(name, access_token) do
       {:ok, value, state}
     else
@@ -121,7 +121,6 @@ defmodule ExSecrets.Providers.AzureKeyVault do
   end
 
   def process_name() do
-
     @process_name
   end
 end

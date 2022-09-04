@@ -23,7 +23,7 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
   end
 
   test "Get Secret Azure Managed Identity with and without cache" do
-     HTTPAdapterMock
+    HTTPAdapterMock
     # Token API Call
     |> expect(:get, &get_token_mock/2)
     # Secret API Call

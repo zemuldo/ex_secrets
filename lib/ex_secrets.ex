@@ -1,9 +1,41 @@
 defmodule ExSecrets do
+  @moduledoc """
+  This module functions to access secrets in an Elixir application.
+
+  Configuration is available for all secret providers:
+
+  Provider specific configurations.
+
+  Azure KeyVault configuration:
+      config :ex_secrets, :providers, %{
+        azure_key_vault: %{
+          tenant_id: "tenant-id",
+          client_id: "client-id",
+          client_secret: "client-secret",
+          key_vault_name: "key-vault-name"
+        }
+
+  Azure Managed Identity Configuration:
+      config :ex_secrets, :providers, %{
+        azure_managed_identity: %{
+          key_vault_name: "KKEYvault-name"
+        }
+
+  Dotenv file:
+      config :ex_secrets, :providers, %{
+        dot_env: %{path: "/path/.env"}
+      })
+
+  """
+
   alias ExSecrets.Cache
   alias ExSecrets.Providers.SystemEnv
   alias ExSecrets.Utils.Resolver
   alias ExSecrets.Utils.SecretFetchLimiter
 
+  @doc """
+  Get secret value
+  """
   def get(key) do
     case get_default_prider() do
       provider when is_atom(provider) -> get(key, provider)
@@ -11,21 +43,33 @@ defmodule ExSecrets do
     end
   end
 
+  @doc """
+  Get secret value with provider name
+  """
   def get(key, provider) do
     with value when not is_nil(value) <- Cache.get(key) do
       value
     else
       nil ->
-        Cache.pass_by(key, SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider]))
+        Cache.pass_by(
+          key,
+          SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider])
+        )
     end
   end
 
+  @doc """
+  Get secret value with provider name and default value
+  """
   def get(key, provider, default) do
     with value when not is_nil(value) <- Cache.get(key) do
       value
     else
       nil ->
-        case Cache.pass_by(key, SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider])) do
+        case Cache.pass_by(
+               key,
+               SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider])
+             ) do
           nil -> default
           value -> value
         end
@@ -41,7 +85,7 @@ defmodule ExSecrets do
     end
   end
 
-  def get_default(key) do
+  defp get_default(key) do
     with value when not is_nil(value) <- Cache.get(key) do
       value
     else
@@ -50,7 +94,7 @@ defmodule ExSecrets do
     end
   end
 
-  def get_default_prider() do
+  defp get_default_prider() do
     Application.get_env(:ex_secrets, :default_provider, get_any_provider())
   end
 

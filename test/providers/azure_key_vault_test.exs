@@ -26,7 +26,7 @@ defmodule ExSecrets.Providers.AzureKeyVaultTest do
   end
 
   test "Get Secret Azure Key Vault with and without cache" do
-     AzureKeyVaultHTTPAdapterMock
+    AzureKeyVaultHTTPAdapterMock
     # Token API Call - 2
     |> expect(:post, &get_token_mock/3)
     |> expect(:post, &get_token_mock/3)

@@ -7,7 +7,7 @@ defmodule ExSecrets.Utils.SecretFetchLimiter do
 
   @secret_fetch_limit_timer :timer.seconds(60)
   @secret_fetch_limit 5
-  @on_secret_fetch_limit_reached :warn
+  @on_secret_fetch_limit_reached :ignore
 
   def start_link(default) when is_list(default) do
     GenServer.start_link(__MODULE__, [], name: @process_name)
@@ -92,7 +92,7 @@ defmodule ExSecrets.Utils.SecretFetchLimiter do
         Kernel.apply(module, function, args)
 
       :warn ->
-        Logger.error("Fetch secret #{key} reached limit #{limit}")
+        Logger.warn("Fetch secret #{key} reached limit #{limit}")
         Kernel.apply(module, function, args)
 
       :raise ->
