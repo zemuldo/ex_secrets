@@ -54,7 +54,7 @@ defmodule ExSecrets.Providers.DotEnv do
   end
 
   defp get_k_v(s) do
-    [k | rest] = String.split(s, "=", trim: true)
+    [k | rest] = String.split(s, "=")
 
     v = Enum.join(rest, "=")
 
