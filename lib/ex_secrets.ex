@@ -109,4 +109,15 @@ defmodule ExSecrets do
   end
 
   def clear_cache(), do: GenServer.cast(Cache, :clear)
+
+  def reset() do
+    providers = ExSecrets.Application.get_providers()
+
+    Enum.each(providers, fn provider ->
+      case Resolver.call(provider) do
+        {:error, _} -> :ok
+        provider -> Kernel.apply(provider, :reset, [])
+      end
+    end)
+  end
 end
