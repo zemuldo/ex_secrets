@@ -18,6 +18,11 @@ defmodule ExSecrets.Providers.DotEnv do
     {:ok, %{}}
   end
 
+  def reset() do
+    read_env()
+    :ok
+  end
+
   defp read_env() do
     path = Config.provider_config_value(:dot_env, :path)
 
@@ -47,10 +52,8 @@ defmodule ExSecrets.Providers.DotEnv do
   end
 
   defp get_v(s) do
-    case get_k_v(s) do
-      {_k, v} -> v
-      _ -> nil
-    end
+    {_k, v} = get_k_v(s)
+    v
   end
 
   defp get_k_v(s) do
@@ -62,7 +65,6 @@ defmodule ExSecrets.Providers.DotEnv do
   end
 
   defp is_value({k, _v}, key), do: k == key
-  defp is_value(_, _), do: false
 
   def process_name() do
     :ex_secrets_dot_env

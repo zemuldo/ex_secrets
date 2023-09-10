@@ -107,4 +107,6 @@ defmodule ExSecrets do
       _ -> raise(ExSecrets.Exceptions.InvalidConfiguration)
     end
   end
+
+  def clear_cache(), do: GenServer.cast(Cache, :clear)
 end

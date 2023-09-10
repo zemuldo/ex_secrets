@@ -5,6 +5,10 @@ defmodule ExSecrets.Providers.SystemEnv do
     {:ok, %{}}
   end
 
+  def reset() do
+    :ok
+  end
+
   def get(name) do
     System.get_env(name)
   end

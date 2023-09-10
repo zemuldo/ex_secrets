@@ -10,6 +10,10 @@ defmodule ExSecrets.Providers.AzureKeyVault do
   @headers %{"Content-Type" => "application/x-www-form-urlencoded"}
   @process_name :ex_secrets_azure_key_vault
 
+  def reset() do
+    :ok
+  end
+
   def init(_) do
     case get_access_token() do
       {:ok, data} ->

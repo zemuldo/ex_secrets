@@ -28,6 +28,12 @@ defmodule ExSecrets.Cache do
     {:reply, value, state}
   end
 
+  @impl true
+  def handle_cast(:clear, %{table: table} = state) do
+    true = :ets.delete_all_objects(table)
+    {:noreply, state}
+  end
+
   def get(key) do
     case System.get_env(key) do
       value when is_binary(value) -> value

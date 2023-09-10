@@ -20,6 +20,10 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
     end
   end
 
+  def reset() do
+    :ok
+  end
+
   def get(name) do
     name = name |> String.split("_") |> Enum.join("-")
 

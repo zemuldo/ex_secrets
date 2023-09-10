@@ -3,6 +3,8 @@ defmodule ExSecrets.Providers.Base do
     quote do
       use GenServer
 
+      @behaviour ExSecrets.Providers.Behaviour
+
       def start_link(default) when is_list(default) do
         GenServer.start_link(__MODULE__, [], name: get_name(default))
       end
