@@ -4,7 +4,7 @@ defmodule ExSecrets.MixProject do
   def project do
     [
       app: :ex_secrets,
-      version: "0.1.4",
+      version: "0.1.6",
       elixir: "~> 1.13",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
