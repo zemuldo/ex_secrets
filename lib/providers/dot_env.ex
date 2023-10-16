@@ -46,15 +46,20 @@ defmodule ExSecrets.Providers.DotEnv do
   end
 
   defp put_env(s) do
-    {k, v} = get_k_v(s)
+     case get_k_v(s) do
+      {k, v} when is_nil(k) or is_nil(v) -> nil
+      {k, v} -> Cache.save(k, v)
+     end
 
-    Cache.save(k, v)
+
   end
 
   defp get_v(s) do
     {_k, v} = get_k_v(s)
     v
   end
+
+  defp get_k_v(nil), do: {nil, nil}
 
   defp get_k_v(s) do
     [k | rest] = String.split(s, "=")
