@@ -108,9 +108,11 @@ defmodule ExSecrets do
     end
   end
 
-  def clear_cache(), do: GenServer.cast(Cache, :clear)
+  def clear_cache(), do: GenServer.call(Cache, :clear)
 
   def reset() do
+    n = GenServer.call(:ex_secrets_cache_store, :clear)
     ExSecrets.Application.get_providers() |> Enum.each(&Kernel.apply(&1, :reset, []))
+    {:ok, n}
   end
 end

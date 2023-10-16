@@ -29,9 +29,9 @@ defmodule ExSecrets.Cache do
   end
 
   @impl true
-  def handle_cast(:clear, %{table: table} = state) do
-    true = :ets.delete_all_objects(table)
-    {:noreply, state}
+  def handle_call(:clear, _from, %{table: table} = state) do
+    n = :ets.select_delete(table, [{{:_, :_}, [], [true]}])
+    {:reply, n, state}
   end
 
   def get(key) do
