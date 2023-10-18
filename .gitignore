@@ -25,3 +25,4 @@ ex_secrets-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 .env
+.temp/

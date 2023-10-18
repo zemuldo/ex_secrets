@@ -28,11 +28,11 @@ defmodule ExSecrets.Providers.AzureKeyManagedIdentityTest do
     |> expect(:get, &get_token_mock/2)
     # Secret API Call
     |> expect(:get, &get_secret_mock/2)
-    # Secret API Call
-    |> expect(:get, &get_secret_mock/2)
 
     assert ExSecrets.get("ABCXYZ", :azure_managed_identity) == "VAL"
     assert ExSecrets.get("ABCXYZ", :azure_managed_identity) == "VAL"
+
+    verify!(HTTPAdapterMock)
 
     HTTPAdapterMock
     # Token API Call
