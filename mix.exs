@@ -34,7 +34,6 @@ defmodule ExSecrets.MixProject do
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:mox, "~> 1.0", only: :test},
       {:ex_doc, "~> 0.14", only: :dev, runtime: false}
-
     ]
   end
 

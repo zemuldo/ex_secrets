@@ -36,7 +36,6 @@ defmodule ExSecretsTest do
     Application.delete_env(:ex_secrets, :providers)
   end
 
-
   test "GET from System env if " do
     k = "FOO#{:rand.uniform(1000)}"
     Application.put_env(:ex_secrets, :providers, %{xyz: %{path: "test"}})
@@ -62,7 +61,7 @@ defmodule ExSecretsTest do
 
     assert ExSecrets.get("JAVA", :dot_env) == "SCRIPTT"
 
-     Application.put_env(:ex_secrets, :providers, %{
+    Application.put_env(:ex_secrets, :providers, %{
       dot_env: %{path: "test/support/fixtures/dot_env_test.env"}
     })
   end

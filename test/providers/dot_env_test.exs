@@ -35,7 +35,7 @@ defmodule ExSecrets.Providers.DotEnvTest do
 
     assert ExSecrets.get("JAVA", :dot_env) == "SCRIPTT"
 
-     Application.put_env(:ex_secrets, :providers, %{
+    Application.put_env(:ex_secrets, :providers, %{
       dot_env: %{path: "test/support/fixtures/dot_env_test.env"}
     })
   end

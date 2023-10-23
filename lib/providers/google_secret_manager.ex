@@ -29,7 +29,6 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   end
 
   def get(name) do
-
     with process when not is_nil(process) <-
            GenServer.whereis(@process_name) do
       GenServer.call(@process_name, {:get, name})
@@ -64,8 +63,8 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   end
 
   defp get_secret(name, state, _) do
-    with {:ok, %{"access_token" => access_token} = new_state} <- get_access_token() ,
-         {:ok, value} <- get_secret_call(name, access_token)  do
+    with {:ok, %{"access_token" => access_token} = new_state} <- get_access_token(),
+         {:ok, value} <- get_secret_call(name, access_token) do
       {:ok, value, state |> Map.merge(new_state)}
     else
       _ -> {:error, "Failed to get secret"}
@@ -75,9 +74,14 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   defp get_secret_call(name, access_token) do
     client = http_adpater()
     service_account_info = Config.provider_config_value(:google_secret_manager, :service_account)
-    url = @secrets_base_uri |> String.replace("PROJECT_NAME", service_account_info["project_id"]) |> String.replace("SECRET_NAME", name)
 
-    with {:ok, %{body: body, status_code: 200}} <- client.get(url, %{"Authorization" => "Bearer #{access_token}"}),
+    url =
+      @secrets_base_uri
+      |> String.replace("PROJECT_NAME", service_account_info["project_id"])
+      |> String.replace("SECRET_NAME", name)
+
+    with {:ok, %{body: body, status_code: 200}} <-
+           client.get(url, %{"Authorization" => "Bearer #{access_token}"}),
          {:ok, %{"payload" => %{"data" => data}}} <- Poison.decode(body) do
       {:ok, Base.decode64!(data)}
     else
@@ -88,12 +92,13 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   defp get_access_token() do
     client = http_adpater()
 
-    {:ok, jwt, _} = jwt()
+    token_req_body = %{
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwt()
+    }
 
-    token_req_body = %{grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: jwt}
-
-
-    with {:ok, %{body: body, status_code: 200}} <- client.post(@token_uri, URI.encode_query(token_req_body), @token_headers),
+    with {:ok, %{body: body, status_code: 200}} <-
+           client.post(@token_uri, URI.encode_query(token_req_body), @token_headers),
          {:ok, data} <- Poison.decode(body) do
       {:ok, data |> Map.put("issued_at", get_current_epoch())}
     else
@@ -117,7 +122,10 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
       "scope" => "https://www.googleapis.com/auth/cloud-platform"
     }
 
-    Joken.encode_and_sign(claims, signer)
+    case Joken.encode_and_sign(claims, signer) do
+      {:ok, jwt, _} -> jwt
+      _ -> ""
+    end
   end
 
   defp http_adpater() do
@@ -127,6 +135,7 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   defp get_current_epoch() do
     System.system_time(:second)
   end
+
   def process_name() do
     @process_name
   end

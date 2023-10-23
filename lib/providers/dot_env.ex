@@ -49,12 +49,10 @@ defmodule ExSecrets.Providers.DotEnv do
   end
 
   defp put_env(s) do
-     case get_k_v(s) do
+    case get_k_v(s) do
       {k, v} when is_nil(k) or is_nil(v) -> nil
       {k, v} -> Cache.save(k, v)
-     end
-
-
+    end
   end
 
   defp get_v(s) do
