@@ -26,3 +26,9 @@ ex_secrets-*.tar
 /tmp/
 .env
 .temp/
+*.key
+*.csr
+*.cert
+*.crt
+*.pem
+*.env.*
