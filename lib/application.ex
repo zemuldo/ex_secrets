@@ -1,4 +1,9 @@
 defmodule ExSecrets.Application do
+
+  @moduledoc """
+  Application for adding providers and cache to the supervision tree.
+  All are besically GenServers that do a bunch of API calls and file access like .env reader
+  """
   use Application
 
   alias ExSecrets.Providers.SystemEnv

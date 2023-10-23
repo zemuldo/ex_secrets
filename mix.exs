@@ -10,7 +10,12 @@ defmodule ExSecrets.MixProject do
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
-      deps: deps()
+      deps: deps(),
+      docs: [
+      main: "readme", # The main page in the docs
+      logo: "logo.png",
+      extras: ["README.md", "GUIDES.md", "CHANGELOG.md", "LICENSE"]
+    ]
     ]
   end
 
@@ -44,6 +49,8 @@ defmodule ExSecrets.MixProject do
   defp package() do
     [
       name: "ex_secrets",
+      source_url: "https://github.com/zemuldo/ex_secrets",
+      homepage_url: "https://hexdocs.pm/ex_secrets/readme.html",
       files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/zemuldo/ex_secrets"}
