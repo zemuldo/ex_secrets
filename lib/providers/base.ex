@@ -1,4 +1,9 @@
 defmodule ExSecrets.Providers.Base do
+  @moduledoc """
+  Base provider provides the basic functions to be implemented by a provider.
+  This macro is used to implement the basic functions of a provider.
+  """
+  
   defmacro __using__(_) do
     quote do
       use GenServer

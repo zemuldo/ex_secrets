@@ -1,6 +1,8 @@
 # ExSecrets
 
-**TODO: Add description**
+App config secret manager for different providers.
+
+
 
 ## Installation
 

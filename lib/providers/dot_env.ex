@@ -1,4 +1,7 @@
 defmodule ExSecrets.Providers.DotEnv do
+  @moduledoc """
+  DotEnv provider provides secrets from a .env file.
+  """
   use ExSecrets.Providers.Base
   alias ExSecrets.Cache
   alias ExSecrets.Utils.Config
