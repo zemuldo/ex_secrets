@@ -1,10 +1,6 @@
 defmodule ExSecrets do
   @moduledoc """
   This module functions to access secrets in an Elixir application.
-
-  Configuration is available for all secret providers:
-
-  Provider specific configurations.
   """
 
   alias ExSecrets.Cache

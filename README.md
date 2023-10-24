@@ -4,8 +4,7 @@ App config secret manager for different providers.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `ex_secrets` to your list of dependencies in `mix.exs`:
+Install by adding `ex_secrets` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -14,10 +13,6 @@ def deps do
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/ex_secrets>.
 
 ## Basic Usage
 
@@ -62,7 +57,7 @@ You can configure:
 
 Azure KeyVault configuration:
 
-```
+```elixir
   config :ex_secrets, :providers, %{
     azure_key_vault: %{
       tenant_id: "tenant-id",
@@ -75,7 +70,7 @@ Azure KeyVault configuration:
 
 Using certificate. You can use `client_certificate_path` or `client_certificate_string`. See Azure keyvault provider section for more details
 
-```
+```elixir
   config :ex_secrets, :providers, %{
     azure_key_vault: %{
       tenant_id: "tenant-id",
@@ -90,7 +85,7 @@ Using certificate. You can use `client_certificate_path` or `client_certificate_
 
   Azure Managed Identity Configuration:
 
-  ```
+  ```elixir
   config :ex_secrets, :providers, %{
     azure_managed_identity: %{
       key_vault_name: "key-vault-name"
@@ -102,7 +97,7 @@ Using certificate. You can use `client_certificate_path` or `client_certificate_
 
   Using service account. You can use `service_account_credentials` or `service_account_credentials_path`. See Azure keyvault provider section for more details
 
-```
+```elixir
   config :ex_secrets, :providers, %{
     google_secret_manager: %{
       service_account_credentials: %{
@@ -125,7 +120,7 @@ Using certificate. You can use `client_certificate_path` or `client_certificate_
 
   Dotenv file:
 
-  ```
+  ```elixir
   config :ex_secrets, :providers, %{
     dot_env: %{path: "/path/.env"}
   }
