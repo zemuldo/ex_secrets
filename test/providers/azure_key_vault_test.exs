@@ -3,7 +3,6 @@ defmodule ExSecrets.Providers.AzureKeyVaultTest do
 
   alias ExSecrets.Providers.AzureKeyVault
   alias ExSecrets.AzureKeyVaultHTTPAdapterMock
-  doctest ExSecrets
 
   import Mox
   setup :set_mox_global
@@ -85,6 +84,7 @@ defmodule ExSecrets.Providers.AzureKeyVaultTest do
     end
 
     verify!(AzureKeyVaultHTTPAdapterMock)
+    Application.delete_env(:ex_secrets, :providers)
   end
 
   defp get_token_mock(_url, _, _) do

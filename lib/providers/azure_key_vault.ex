@@ -210,7 +210,7 @@ defmodule ExSecrets.Providers.AzureKeyVault do
   defp build_claims_body(%{"cert" => cert}) when is_binary(cert) do
     client_id = Config.provider_config_value(:azure_key_vault, :client_id)
 
-    case get_cert() |> IO.inspect() do
+    case get_cert() do
       {:ok, cert} ->
         URI.encode_query(%{
           "client_id" => client_id,

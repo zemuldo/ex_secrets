@@ -29,7 +29,9 @@ defmodule ExSecrets.Providers.DotEnv do
   defp read_env() do
     path = Config.provider_config_value(:dot_env, :path)
 
-    with {:ok, s} <- File.read(path),
+    with true <- is_binary(path),
+         true <- File.exists?(path),
+         {:ok, s} <- File.read(path),
          [_ | _] = envs <- String.split(s, ~r{(\r\n|\r|\n|\\n)}, trim: true) do
       Enum.each(envs, &put_env/1)
     else
@@ -40,11 +42,13 @@ defmodule ExSecrets.Providers.DotEnv do
   defp get_scripted(key) do
     path = Config.provider_config_value(:dot_env, :path)
 
-    with {:ok, s} <- File.read(path),
+    with true <- is_binary(path),
+         true <- File.exists?(path),
+         {:ok, s} <- File.read(path),
          [_ | _] = envs <- String.split(s, ~r{(\r\n|\r|\n|\\n)}, trim: true) do
       Enum.find(envs, &(get_k_v(&1) |> is_value(key))) |> get_v()
     else
-      _ -> raise(raise(ExSecrets.Exceptions.InvalidConfiguration, ".env is not found"))
+      _ -> nil
     end
   end
 

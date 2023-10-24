@@ -5,46 +5,51 @@ defmodule ExSecrets do
   Configuration is available for all secret providers:
 
   Provider specific configurations.
-
-  Azure KeyVault configuration:
-      config :ex_secrets, :providers, %{
-        azure_key_vault: %{
-          tenant_id: "tenant-id",
-          client_id: "client-id",
-          client_secret: "client-secret",
-          key_vault_name: "key-vault-name"
-        }
-
-  Azure Managed Identity Configuration:
-      config :ex_secrets, :providers, %{
-        azure_managed_identity: %{
-          key_vault_name: "KKEYvault-name"
-        }
-
-  Dotenv file:
-      config :ex_secrets, :providers, %{
-        dot_env: %{path: "/path/.env"}
-      })
-
   """
 
   alias ExSecrets.Cache
-  alias ExSecrets.Providers.SystemEnv
   alias ExSecrets.Utils.Resolver
   alias ExSecrets.Utils.SecretFetchLimiter
 
   @doc """
   Get secret value
+
+  ## Examples
+
+      iex(1)> ExSecrets.get("FOO")
+      nil
+      iex(2)> Application.put_env(:ex_secrets, :default_provider, :dot_env)
+      :ok
+      iex(3)> ExSecrets.get("FOO")
+      nil
+      iex(4)> System.put_env "FOO", "BAR"
+      :ok
+      iex(5)> ExSecrets.get("FOO")
+      "BAR"
+      iex(6)> System.delete_env "FOO"
+      :ok
+      iex(7)> Application.delete_env(:ex_secrets, :default_provider)
+      :ok
   """
   def get(key) do
-    case get_default_prider() do
+    case get_any_provider() do
       provider when is_atom(provider) -> get(key, provider)
       _ -> get_default(key)
     end
   end
 
   @doc """
-  Get secret value with provider name
+  Get secret value with provider name.
+
+  ## Examples
+      iex(1)> Application.put_env(:ex_secrets, :providers, %{dot_env: %{path: "test/support/fixtures/dot_env_test.env"}})
+      :ok
+      iex(2)> ExSecrets.get("JAVA", :dot_env)
+      "SCRIPT"
+      iex(3)> ExSecrets.get("JAVA")
+      "SCRIPT"
+      iex(4)> Application.delete_env(:ex_secrets, :providers)
+      :ok
   """
   def get(key, provider) do
     with value when not is_nil(value) <- Cache.get(key) do
@@ -60,6 +65,16 @@ defmodule ExSecrets do
 
   @doc """
   Get secret value with provider name and default value
+
+  ## Examples
+      iex(1)> Application.put_env(:ex_secrets, :providers, %{dot_env: %{path: "test/support/fixtures/dot_env_test.env"}})
+      :ok
+      iex(2)> ExSecrets.get("ERL", :dot_env)
+      nil
+      iex(3)> ExSecrets.get("ERL", :dot_env, "ANG")
+      "ANG"
+      iex(4)> Application.delete_env(:ex_secrets, :providers)
+      :ok
   """
   def get(key, provider, default) do
     with value when not is_nil(value) <- Cache.get(key) do
@@ -81,21 +96,24 @@ defmodule ExSecrets do
          value <- Kernel.apply(provider, :get, [key]) do
       value
     else
-      _ -> nil
+      _ -> get_default(key)
     end
   end
 
   defp get_default(key) do
-    with value when not is_nil(value) <- Cache.get(key) do
-      value
+    with value when is_nil(value) <- Cache.get(key),
+         provider <- get_default_prider() do
+      Cache.pass_by(
+        key,
+        SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider])
+      )
     else
-      nil ->
-        Cache.pass_by(key, SystemEnv.get(key))
+      value -> value
     end
   end
 
   defp get_default_prider() do
-    Application.get_env(:ex_secrets, :default_provider, get_any_provider())
+    Application.get_env(:ex_secrets, :default_provider, :system_env)
   end
 
   defp get_any_provider() do
@@ -104,7 +122,7 @@ defmodule ExSecrets do
          provider <- Map.keys(providers) |> Kernel.++([:system_env]) |> Enum.at(0) do
       provider
     else
-      _ -> raise(ExSecrets.Exceptions.InvalidConfiguration)
+      _ -> nil
     end
   end
 

@@ -35,15 +35,9 @@ defmodule ExSecrets.Cache do
   end
 
   def get(key) do
-    case System.get_env(key) do
-      value when is_binary(value) ->
-        value
-
-      nil ->
-        case GenServer.whereis(@store_name) do
-          nil -> System.get_env(key)
-          _ -> GenServer.call(@store_name, {:get, key})
-        end
+    case GenServer.whereis(@store_name) do
+      nil -> nil
+      _ -> GenServer.call(@store_name, {:get, key})
     end
   end
 

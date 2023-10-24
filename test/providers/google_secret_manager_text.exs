@@ -3,7 +3,6 @@ defmodule ExSecrets.Providers.GoogleSecretManagerTest do
 
   alias ExSecrets.Providers.GoogleSecretManager
   alias ExSecrets.HTTPAdapterMock
-  doctest ExSecrets
 
   import Mox
   setup :set_mox_global
@@ -15,8 +14,7 @@ defmodule ExSecrets.Providers.GoogleSecretManagerTest do
           "type" => "service_account",
           "project_id" => "test",
           "private_key_id" => "test123",
-          "private_key" =>
-            "-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----\n",
+          "private_key" => "-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----\n",
           "client_email" => "test@test.iam.gserviceaccount.com",
           "client_id" => "test",
           "auth_uri" => "https://accounts.google.com/o/oauth2/auth",
@@ -94,6 +92,7 @@ defmodule ExSecrets.Providers.GoogleSecretManagerTest do
     end
 
     verify!(HTTPAdapterMock)
+    Application.delete_env(:ex_secrets, :providers)
   end
 
   defp get_token_mock(_url, _, _) do

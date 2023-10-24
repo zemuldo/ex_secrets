@@ -1,6 +1,5 @@
 defmodule ExSecrets.Providers.DotEnvTest do
   use ExUnit.Case
-  doctest ExSecrets
 
   test "Get with startup" do
     Application.put_env(:ex_secrets, :providers, %{
@@ -9,6 +8,7 @@ defmodule ExSecrets.Providers.DotEnvTest do
 
     {:ok, _} = GenServer.start(ExSecrets.Providers.DotEnv, [])
     assert ExSecrets.get("JAVA", :dot_env) == "SCRIPT"
+    Application.delete_env(:ex_secrets, :providers)
   end
 
   test "Get without startup" do
@@ -17,6 +17,7 @@ defmodule ExSecrets.Providers.DotEnvTest do
     })
 
     assert ExSecrets.get("ASD", :dot_env) == "FGH"
+    Application.delete_env(:ex_secrets, :providers)
   end
 
   test "reset" do
@@ -38,5 +39,7 @@ defmodule ExSecrets.Providers.DotEnvTest do
     Application.put_env(:ex_secrets, :providers, %{
       dot_env: %{path: "test/support/fixtures/dot_env_test.env"}
     })
+
+    Application.delete_env(:ex_secrets, :providers)
   end
 end

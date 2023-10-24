@@ -64,6 +64,7 @@ defmodule ExSecrets.ApplicationTestsUserManyProviders do
 
   setup do
     Application.put_env(:ex_secrets, :providers, %{dot_env: %{}})
+    on_exit(fn -> Application.delete_env(:ex_secrets, :providers) end)
   end
 
   test "test" do
