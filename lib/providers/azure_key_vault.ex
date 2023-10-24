@@ -11,15 +11,15 @@ defmodule ExSecrets.Providers.AzureKeyVault do
   ## Configuration
 
   You can configure this provider as shown below. Either `client_secret` or `client_cert_path` is required to implement authentication.
-  Client `client_certificate` is recommended for security. If you provide both, `client_certificate` is used. All other config options are mandatory.
+  Client `client_certificate_?` is recommended for security. If you provide both, `client_certificate_?` is used. All other config options are mandatory.
   ```
-  Azure KeyVault configuration:
       config :ex_secrets, :providers, %{
         azure_key_vault: %{
           tenant_id: "tenant-id",
           client_id: "client-id",
           client_secret: "client-secret",
-          client_certificate: "/path/cert.key",
+          client_certificate_string: "base 64 encoded contents of cert.key",
+          client_certificate_path: "/path/cert.key",
           client_certificate_x5t: "x5t",
           key_vault_name: "key-vault-name"
         }
@@ -75,8 +75,10 @@ defmodule ExSecrets.Providers.AzureKeyVault do
 
   Finally generate the `x5t` JWT header required by Entra using the command below. See https://learn.microsoft.com/en-us/entra/identity-platform/certificate-credentials#assertion-format.
   ```
-  openssl x509 -in mycert.crt -fingerprint -noout) | sed 's/SHA1 Fingerprint=//g' | sed 's/://g' | xxd -r -ps | base64
+  openssl x509 -in mycert.crt -fingerprint -noout | sed 's/SHA1 Fingerprint=//g' | sed 's/://g' | xxd -r -ps | base64
   ```
+
+  Save the value as `client_certificate_x5t` in the config.
   """
 
   @headers %{"Content-Type" => "application/x-www-form-urlencoded"}
@@ -165,11 +167,20 @@ defmodule ExSecrets.Providers.AzureKeyVault do
   defp get_access_token() do
     client = http_adpater()
     client_secret = Config.provider_config_value(:azure_key_vault, :client_secret)
-    client_certificate = Config.provider_config_value(:azure_key_vault, :client_certificate)
+
+    client_certificate_str =
+      Config.provider_config_value(:azure_key_vault, :client_certificate_string)
+
+    client_certificate_path =
+      Config.provider_config_value(:azure_key_vault, :client_certificate_path)
+
     tenant_id = Config.provider_config_value(:azure_key_vault, :tenant_id)
 
     with req_body when is_binary(req_body) <-
-           build_claims_body(%{"secret" => client_secret, "cert" => client_certificate}),
+           build_claims_body(%{
+             "secret" => client_secret,
+             "cert" => client_certificate_str || client_certificate_path
+           }),
          {:ok, %{body: body, status_code: 200}} <-
            tenant_id
            |> token_uri()
@@ -185,16 +196,33 @@ defmodule ExSecrets.Providers.AzureKeyVault do
     end
   end
 
+  defp get_cert() do
+    string = Config.provider_config_value(:azure_key_vault, :client_certificate_string)
+    path = Config.provider_config_value(:azure_key_vault, :client_certificate_path)
+
+    cond do
+      is_binary(string) -> Base.decode64(string)
+      is_binary(path) -> File.read(path)
+      true -> {:error, :no_cert}
+    end
+  end
+
   defp build_claims_body(%{"cert" => cert}) when is_binary(cert) do
     client_id = Config.provider_config_value(:azure_key_vault, :client_id)
 
-    URI.encode_query(%{
-      "client_id" => client_id,
-      "scope" => @scope,
-      "grant_type" => "client_credentials",
-      "client_assertion_type" => "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-      "client_assertion" => jwt()
-    })
+    case get_cert() |> IO.inspect() do
+      {:ok, cert} ->
+        URI.encode_query(%{
+          "client_id" => client_id,
+          "scope" => @scope,
+          "grant_type" => "client_credentials",
+          "client_assertion_type" => "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+          "client_assertion" => jwt(cert)
+        })
+
+      err ->
+        err
+    end
   end
 
   defp build_claims_body(%{"secret" => secret}) when is_binary(secret) do
@@ -210,9 +238,9 @@ defmodule ExSecrets.Providers.AzureKeyVault do
 
   defp build_claims_body(_), do: {:error, :no_auth}
 
-  defp jwt() do
+  defp jwt(cert) do
+    File.write("base64.crt", Base.encode64(cert))
     client_id = Config.provider_config_value(:azure_key_vault, :client_id)
-    client_certificate = Config.provider_config_value(:azure_key_vault, :client_certificate)
 
     client_certificate_x5t =
       Config.provider_config_value(:azure_key_vault, :client_certificate_x5t)
@@ -221,7 +249,7 @@ defmodule ExSecrets.Providers.AzureKeyVault do
     t = DateTime.to_unix(DateTime.utc_now())
 
     signer =
-      Joken.Signer.create("RS256", %{"pem" => File.read!(client_certificate)}, %{
+      Joken.Signer.create("RS256", %{"pem" => cert}, %{
         "x5t" => client_certificate_x5t
       })
 

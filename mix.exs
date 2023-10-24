@@ -12,10 +12,11 @@ defmodule ExSecrets.MixProject do
       package: package(),
       deps: deps(),
       docs: [
-      main: "readme", # The main page in the docs
-      logo: "logo.png",
-      extras: ["README.md", "GUIDES.md", "CHANGELOG.md", "LICENSE"]
-    ]
+        # The main page in the docs
+        main: "readme",
+        logo: "logo.png",
+        extras: ["README.md", "GUIDES.md", "CHANGELOG.md", "LICENSE"]
+      ]
     ]
   end
 

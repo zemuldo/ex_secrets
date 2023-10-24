@@ -1,7 +1,40 @@
 defmodule ExSecrets.Providers.GoogleSecretManager do
   @moduledoc """
   Google Secret Manager provider provides secrets from an Google Secret Manager through a rest API.
-  To create GCP secretb
+
+  ### Configuration
+
+  Using the Service Account Credentials File
+  ```
+  Application.put_env(:ex_secrets, :providers, %{
+      google_secret_manager: %{
+        service_account_credentials_path: ".temp/cred.json"
+      }
+    })
+
+  ```
+
+  Using the json file contents
+
+  ```
+  Application.put_env(:ex_secrets, :providers, %{
+      google_secret_manager: %{
+        service_account_credentials: %{
+        "type" => "service_account",
+        "project_id" => "project-id",
+        "private_key_id" => "keyid",
+        "private_key" => "-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----\n",
+        "client_email" => "secretaccess@project-id.iam.gserviceaccount.com",
+        "client_id" => "client-id",
+        "auth_uri" => "https://accounts.google.com/o/oauth2/auth",
+        "token_uri" => "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url" => "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url" => "https://www.googleapis.com/robot/v1/metadata/x509/secretaccess%40project-id.iam.gserviceaccount.com",
+        "universe_domain" => "googleapis.com"
+        }
+      }
+    })
+  ```
   """
 
   use ExSecrets.Providers.Base
@@ -15,10 +48,10 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   @secrets_base_uri "https://secretmanager.googleapis.com/v1/projects/PROJECT_NAME/secrets/SECRET_NAME/versions/latest:access"
 
   def init(_) do
-    case get_access_token() do
-      {:ok, data} ->
-        {:ok, data |> Map.put("issued_at", get_current_epoch())}
-
+    with {:ok, cred} <- get_service_account_credentials(),
+         {:ok, data} <- get_access_token(cred) do
+      {:ok, data |> Map.put("issued_at", get_current_epoch())}
+    else
       _ ->
         {:ok, %{}}
     end
@@ -55,7 +88,7 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
          current_time
        )
        when issued_at + expires_in - current_time > 5 do
-    with {:ok, value} <- get_secret_call(name, access_token) do
+    with {:ok, value} <- get_secret_call(name, access_token, state.cred) do
       {:ok, value, state}
     else
       _ -> {:error, "Failed to get secret"}
@@ -63,21 +96,21 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   end
 
   defp get_secret(name, state, _) do
-    with {:ok, %{"access_token" => access_token} = new_state} <- get_access_token(),
-         {:ok, value} <- get_secret_call(name, access_token) do
+    with {:ok, cred} <- get_service_account_credentials(),
+         {:ok, %{"access_token" => access_token} = new_state} <- get_access_token(cred),
+         {:ok, value} <- get_secret_call(name, access_token, cred) do
       {:ok, value, state |> Map.merge(new_state)}
     else
       _ -> {:error, "Failed to get secret"}
     end
   end
 
-  defp get_secret_call(name, access_token) do
+  defp get_secret_call(name, access_token, cred) do
     client = http_adpater()
-    service_account_info = Config.provider_config_value(:google_secret_manager, :service_account)
 
     url =
       @secrets_base_uri
-      |> String.replace("PROJECT_NAME", service_account_info["project_id"])
+      |> String.replace("PROJECT_NAME", cred["project_id"])
       |> String.replace("SECRET_NAME", name)
 
     with {:ok, %{body: body, status_code: 200}} <-
@@ -89,12 +122,12 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
     end
   end
 
-  defp get_access_token() do
+  defp get_access_token(cred) do
     client = http_adpater()
 
     token_req_body = %{
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt()
+      assertion: jwt(cred)
     }
 
     with {:ok, %{body: body, status_code: 200}} <-
@@ -107,15 +140,39 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
     end
   end
 
-  defp jwt do
-    service_account_info = Config.provider_config_value(:google_secret_manager, :service_account)
+  defp get_service_account_credentials() do
+    path = Config.provider_config_value(:google_secret_manager, :service_account_credentials_path)
+    cred = Config.provider_config_value(:google_secret_manager, :service_account_credentials)
+
+    cond do
+      is_map(cred) ->
+        {:ok, cred}
+
+      is_binary(path) ->
+        get_cred_from_path(path)
+
+      true ->
+        {:error, :no_auth}
+    end
+  end
+
+  defp get_cred_from_path(path) do
+    with {:ok, s} <- File.read(path),
+         {:ok, cred} <- Poison.decode(s) do
+      {:ok, cred}
+    else
+      _ -> {:error, :no_auth}
+    end
+  end
+
+  defp jwt(cred) do
     t = DateTime.to_unix(DateTime.utc_now())
 
-    signer = Joken.Signer.create("RS256", %{"pem" => service_account_info["private_key"]})
+    signer = Joken.Signer.create("RS256", %{"pem" => cred["private_key"]})
 
     claims = %{
-      "iss" => service_account_info["client_email"],
-      "sub" => service_account_info["client_email"],
+      "iss" => cred["client_email"],
+      "sub" => cred["client_email"],
       "aud" => "https://oauth2.googleapis.com/token",
       "exp" => t + 1200,
       "iat" => t,

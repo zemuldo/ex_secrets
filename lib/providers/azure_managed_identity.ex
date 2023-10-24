@@ -5,6 +5,17 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
 
   @moduledoc """
   Azure Key Vault provider provides secrets from an Azure Key Vault through a rest API.
+
+  Only the keyvault name is required here once the managed identity has been given access to the keyvault.
+
+  ```
+      config :ex_secrets, :providers, %{
+         azure_managed_identity: %{
+         key_vault_name: "key-vault-name"
+      }
+  ```
+
+  The provider will handle token renewals and secret fetch.
   """
 
   @headers %{"Content-Type" => "application/x-www-form-urlencoded", "Metadata" => "true"}

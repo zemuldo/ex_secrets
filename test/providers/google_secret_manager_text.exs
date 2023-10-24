@@ -11,12 +11,12 @@ defmodule ExSecrets.Providers.GoogleSecretManagerTest do
   setup do
     Application.put_env(:ex_secrets, :providers, %{
       google_secret_manager: %{
-        service_account: %{
+        service_account_credentials: %{
           "type" => "service_account",
           "project_id" => "test",
           "private_key_id" => "test123",
           "private_key" =>
-            "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDpqU2PXKm08Png\nhgYHu6VN/GAmvrBCoXmCO68WPSBx5la3JI0lSyf3uW9AXzzfe6ApP08xYS9WVGUN\n8xgFLJnVMjA+MhUaZ0AGmiE2bp1qWwkOxKaWf+Ynh0xwS7p7tIcE9CHU1KcArgfE\nAjwQxs/DbgXYUdNTOAbTeP4CLpSxh8SiZpqQ2egCPjNVHWePCPlkOp9s1pDjSktb\nH4O6CiZZ6bS1/7mQ2erzfzzG9w7l1aPLcfDQLHtXcFzXkSvOVhXwIaS3fS4+lf/4\ndXFzinbahbyitfL6uaItBrluFvotAA5nv1Z3Pc0o+4t8PThmLCKP6T5cBvWOc81K\nlQ23LPd/AgMBAAECggEACmzPVRIhUD1gKLBSHI42teAIujHP02k47qKTET7w76QD\nQnCTC5Lq2ZagbBLTuHTflHeKpP1dC1EAoTqzW6e9xVFT7bJ2VpM8vA6sZK1SwKgH\nI22KsTRLpH/Y3TnDvDk1vPbXe5NxUApztj8TRvxX0LRb9mbQMupRA6ZmTtqdL751\nJYdhBbrqiNE97r66BPx8fEmP+797dtSaRRSilX29TqtX2C7xnrk0LyO8tnwd9anV\n2/zBRNu44qQufeVojrFKdAL+Thfgt664zZgzP7NeuTL4X94BOnogH7IcGUEa9sB7\nGxZ5xhIBrYrYNXAmoZjLezi023q6cqq9pXrGQeQ3YQKBgQD8nGlaJuSnxiIO3Qn9\n4hccAWTA3vHn5AIaInl9Z0sZGm/83ct2uE371XDr26hwVVmqVWaanG8EXtF+zwia\npnCudrUXsV2P8QbSBhWBGCsa1NykbVg9q+dU2n0W7JhFbhwZFbd4g+3TjNCd1Gor\nkQ2GtbOugXt2mikaD0ls/1j1ZQKBgQDsy88mwHbNvbSXVmX+ibRzNMd8u3d3EMlS\nV+mkx6+/d3OLaPHqGRZcWfKprT+Fiz/H7C9MQU+ypjqcA0oEA6nE3XTAwlfBXKrN\nnNY8AoqSmrMc3OfxgEHKL6v5D+xNGPEaet3EVnCQ8CvTXYynHraA4pkDZ7bAq7H7\ntG34j7AtEwKBgGBP1k8cAxQAk92s4vFccUkpMtviZMLwCOkj+cQZTOWuUcJMYhXK\noVkCAQK8BhWGRSCPXQZX3HADIsbBcttb2Bx8gAEfi7ekwt/yl+JXb5/URqeeVQV2\ndEXC4+yImmnmWGosAH6/dj6xMpzqbuxbapfQ0UgYcBVBI6ie6XTYSneNAoGAT7MB\nU/+vfOv+3nj790IN9ECta/QE75Q8znQ8dXOoWX8w6pk14x7ygb7ch/OBz8bgfr+l\n47qPwodkbqJExTkeaN5Ir6A5vSEdc/r3uFb6oQFki7BmeMg8XHrTHQ8Y75IXhFwa\nTDzzwjSz634vGwihUJvz+EtuHUcsrpU59lEWcPUCgYEAkUhT9yfA47Wfc9Pv3vS5\n5dYm2QHfEU0RhOozY6DKMJs60zsysp6XFBg0vpKJXa8/Q7gFXz6wd+kYJsGUc6lo\ncfVt3fXFLNqnOxYKZOU+T41qhASOXdSM/OR5OJ7m8kYepEhKIuXxlVNxO8reNnm5\nWJ9lbCurW3dM5ol4DgCKaak=\n-----END PRIVATE KEY-----\n",
+            "-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----\n",
           "client_email" => "test@test.iam.gserviceaccount.com",
           "client_id" => "test",
           "auth_uri" => "https://accounts.google.com/o/oauth2/auth",
