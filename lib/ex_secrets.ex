@@ -85,6 +85,11 @@ defmodule ExSecrets do
     end
   end
 
+
+  @doc """
+  Internal function for fetching secret with provide for catching and rate limiting.
+  Do not rely on this function.
+  """
   def get_using_provider(key, provider) do
     with provider when is_atom(provider) <- Resolver.call(provider),
          value <- Kernel.apply(provider, :get, [key]) do
@@ -120,8 +125,9 @@ defmodule ExSecrets do
     end
   end
 
-  def clear_cache(), do: GenServer.call(Cache, :clear)
-
+   @doc """
+  Resets cache and reloads all providers.
+  """
   def reset() do
     n = GenServer.call(:ex_secrets_cache_store, :clear)
     ExSecrets.Application.get_providers() |> Enum.each(&Kernel.apply(&1, :reset, []))
