@@ -24,8 +24,8 @@ defmodule ExSecrets do
   Dotenv file:
       config :ex_secrets, :providers, %{
         dot_env: %{path: "/path/.env"}
-      })
-
+      }
+  default_provider: :dot_env
   """
 
   alias ExSecrets.Cache
