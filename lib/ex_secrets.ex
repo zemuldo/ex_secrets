@@ -40,10 +40,8 @@ defmodule ExSecrets do
   ## Examples
       iex(1)> Application.put_env(:ex_secrets, :providers, %{dot_env: %{path: "test/support/fixtures/dot_env_test.env"}})
       :ok
-      iex(2)> ExSecrets.get("JAVA", :dot_env)
-      "SCRIPT"
-      iex(3)> ExSecrets.get("JAVA")
-      "SCRIPT"
+      iex(2)> ExSecrets.get("DEVS", :dot_env)
+      "ROCKS"
       iex(4)> Application.delete_env(:ex_secrets, :providers)
       :ok
   """
