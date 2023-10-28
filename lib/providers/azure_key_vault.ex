@@ -113,12 +113,33 @@ defmodule ExSecrets.Providers.AzureKeyVault do
     end
   end
 
-  def set(_name, _value) do
-    {:error, "Not implemented"}
+  def set(name, value) do
+    name = name |> String.split("_") |> Enum.join("-")
+
+    with process when not is_nil(process) <-
+           GenServer.whereis(@process_name) do
+      GenServer.call(@process_name, {:set, name, value})
+    else
+      nil ->
+        case set_secret(name, value, %{}, nil) do
+          {:ok, value, _} ->
+            value
+
+          _ ->
+            {:error, "Could not set secret, check credentials and permissions"}
+        end
+    end
   end
 
   def handle_call({:get, name}, _from, state) do
     case get_secret(name, state, get_current_epoch()) do
+      {:ok, secret, state} -> {:reply, secret, state}
+      _ -> {:reply, nil, state}
+    end
+  end
+
+  def handle_call({:set, name, value}, _from, state) do
+    case set_secret(name, value, state, get_current_epoch()) do
       {:ok, secret, state} -> {:reply, secret, state}
       _ -> {:reply, nil, state}
     end
@@ -149,23 +170,64 @@ defmodule ExSecrets.Providers.AzureKeyVault do
          {:ok, value} <- get_secret_call(name, access_token) do
       {:ok, value, state |> Map.merge(new_state) |> Map.put("issued_at", get_current_epoch())}
     else
+      err -> err
+    end
+  end
+
+  defp set_secret(
+         name,
+         value,
+         %{"access_token" => access_token, "issued_at" => issued_at, "expires_in" => expires_in} =
+           state,
+         current_time
+       )
+       when issued_at + expires_in - current_time > 5 do
+    with {:ok, value} <- set_secret_call(name, value, access_token),
+         true <- is_binary(value) do
+      {:ok, value, state}
+    else
+      err -> err
+    end
+  end
+
+  defp set_secret(name, value, state, _) do
+    with {:ok, %{"access_token" => access_token} = new_state} <-
+           get_access_token(),
+         {:ok, value} <- set_secret_call(name, value, access_token) do
+      {:ok, value, state |> Map.merge(new_state) |> Map.put("issued_at", get_current_epoch())}
+    else
       _ -> {:error, "Failed to get secret"}
     end
   end
 
   defp get_secret_call(name, access_token) do
     client = http_adpater()
-    key_vault_name = Config.provider_config_value(:azure_key_vault, :key_vault_name)
 
     with {:ok, %{body: body, status_code: 200}} <-
-           client.get(
-             "https://#{key_vault_name}.vault.azure.net/secrets/#{name}?api-version=2016-10-01",
-             %{"Authorization" => "Bearer #{access_token}"}
-           ),
+           name
+           |> secret_url()
+           |> client.get(%{"Authorization" => "Bearer #{access_token}"}),
          {:ok, %{"value" => value}} <- Poison.decode(body) do
       {:ok, value}
     else
       _ -> {:error, "Failed to get secret"}
+    end
+  end
+
+  defp set_secret_call(name, value, access_token) do
+    client = http_adpater()
+
+    with {:ok, %{body: body, status_code: 200}} <-
+           name
+           |> secret_url()
+           |> client.put(Poison.encode!(%{value: value}), %{
+             "Authorization" => "Bearer #{access_token}",
+             "content-type" => "application/json"
+           }),
+         {:ok, %{"value" => value}} <- Poison.decode(body) do
+      {:ok, value}
+    else
+      err -> err
     end
   end
 
@@ -278,6 +340,11 @@ defmodule ExSecrets.Providers.AzureKeyVault do
 
   defp http_adpater() do
     Application.get_env(:ex_secrets, :http_adapter, HTTPoison)
+  end
+
+  defp secret_url(name) do
+    key_vault_name = Config.provider_config_value(:azure_key_vault, :key_vault_name)
+    "https://#{key_vault_name}.vault.azure.net/secrets/#{name}?api-version=2016-10-01"
   end
 
   def process_name() do

@@ -106,16 +106,7 @@ defmodule ExSecrets do
       true -> :ok
     end
 
-    with true <- is_atom(provider),
-         value when not is_nil(value) <- Cache.get(key) do
-      value
-    else
-      nil ->
-        Cache.pass_by(
-          key,
-          SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider])
-        )
-    end
+    get(key, provider: provider)
   end
 
   @doc """
@@ -123,18 +114,19 @@ defmodule ExSecrets do
   """
   @deprecated "This function is deprecated. Use get/2 instead."
   def get(key, provider, default) do
-    with true <- is_atom(provider),
-         value when not is_nil(value) <- Cache.get(key) do
-      value
+    case get(key, provider: provider) do
+      nil -> default
+      value -> value
+    end
+  end
+
+  def set(provider, key, value) do
+    with provider when is_atom(provider) <- Resolver.call(provider) do
+      Kernel.apply(provider, :set, [key, value])
+      Cache.save(key, value)
     else
-      nil ->
-        case Cache.pass_by(
-               key,
-               SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider])
-             ) do
-          nil -> default
-          value -> value
-        end
+      {:error, message} -> {:error, message}
+      _ -> {:error, :provider_not_found}
     end
   end
 
