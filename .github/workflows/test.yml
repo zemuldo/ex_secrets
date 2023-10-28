@@ -2,6 +2,7 @@ on: push
 env:
   OTP_VERSION: 24.0
   ELIXIR_VERSION: 1.13.3
+  MIX_ENV: test
 
 jobs:
   test:
@@ -14,6 +15,7 @@ jobs:
           elixir-version: ${{ env.ELIXIR_VERSION }}
       - run: echo 'JAVA=SCRIPT\nER=LANG' > .env
       - run: mix deps.get
+      - run: mix check
       - run: mix test
 
       - name: Elixir Hex, mix build Cache

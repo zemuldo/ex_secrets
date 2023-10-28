@@ -18,13 +18,13 @@ defmodule ExSecretsTest do
   test "Get with Provider FOO - BAR" do
     k = "FOO#{:rand.uniform(1000)}"
     System.put_env(k, "BARR")
-    assert ExSecrets.get(k, :system_env) == "BARR"
+    assert ExSecrets.get(k, provider: :system_env) == "BARR"
     System.delete_env(k)
   end
 
   test "Get with wring Provider FOOOZ - BARRZ" do
     k = "FOO#{:rand.uniform(1000)}"
-    assert ExSecrets.get(k, :abc) == nil
+    assert ExSecrets.get(k, provider: :abc) == nil
     System.delete_env(k)
   end
 
@@ -32,7 +32,7 @@ defmodule ExSecretsTest do
     k = "FOO#{:rand.uniform(1000)}"
     Application.put_env(:ex_secrets, :providers, %{xyz: %{path: "test"}})
     System.put_env(k, "BARR")
-    assert ExSecrets.get(k, :system_env) == "BARR"
+    assert ExSecrets.get(k, provider: :system_env) == "BARR"
     System.delete_env(k)
     Application.delete_env(:ex_secrets, :providers)
   end
@@ -52,13 +52,15 @@ defmodule ExSecretsTest do
     })
 
     {:ok, _} = GenServer.start(ExSecrets.Providers.DotEnv, [])
-    assert ExSecrets.get("JAVA", :dot_env) == "SCRIPT"
+    assert ExSecrets.get("JAVA", provider: :dot_env) == "SCRIPT"
 
     Application.put_env(:ex_secrets, :providers, %{
       dot_env: %{path: "test/support/fixtures/dot_env_test_3.env"}
     })
 
     ExSecrets.reset()
+
+    assert ExSecrets.get("JAVA", provider: :dot_env) == "SCRIPTT"
 
     assert ExSecrets.get("JAVA", :dot_env) == "SCRIPTT"
 

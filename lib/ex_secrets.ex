@@ -7,46 +7,107 @@ defmodule ExSecrets do
   alias ExSecrets.Utils.Resolver
   alias ExSecrets.Utils.SecretFetchLimiter
 
+  require Logger
+
   @doc """
-  Get secret value
+  Get secret value.
+  You can pass two options:
+  - provider: Name of the provider to use. Default is :system_env
+  - default_value: Default value to return if secret is not found. Default is nil
 
   ## Examples
 
-      iex(1)> ExSecrets.get("FOO")
+      iex> ExSecrets.get("FOO")
       nil
-      iex(2)> Application.put_env(:ex_secrets, :default_provider, :dot_env)
+      iex> Application.put_env(:ex_secrets, :default_provider, :dot_env)
       :ok
-      iex(3)> ExSecrets.get("FOO")
+      iex> ExSecrets.get("FOO")
       nil
-      iex(4)> System.put_env "FOO", "BAR"
+      iex> System.put_env "FOO", "BAR"
       :ok
-      iex(5)> ExSecrets.get("FOO")
+      iex> ExSecrets.get("FOO")
       "BAR"
-      iex(6)> System.delete_env "FOO"
+      iex> System.delete_env "FOO"
       :ok
-      iex(7)> Application.delete_env(:ex_secrets, :default_provider)
+      iex> ExSecrets.get("FOO")
+      "BAR"
+      iex> ExSecrets.reset()
+      :ok
+      iex> ExSecrets.get("FOO")
+      nil
+      iex> Application.delete_env(:ex_secrets, :default_provider)
+      :ok
+      iex> Application.put_env(:ex_secrets, :providers, %{dot_env: %{path: "test/support/fixtures/dot_env_test.env"}})
+      :ok
+      iex> ExSecrets.get("ERL", provider: :dot_env)
+      nil
+      iex> ExSecrets.get("ERL", provider: :dot_env, default_value: "ANG")
+      "ANG"
+      iex> Application.delete_env(:ex_secrets, :providers)
+      :ok
+      iex> Application.put_env(:ex_secrets, :providers, %{dot_env: %{path: "test/support/fixtures/dot_env_test.env"}})
+      :ok
+      iex> ExSecrets.get("DEVS", provider: :dot_env)
+      "ROCKS"
+      iex> Application.delete_env(:ex_secrets, :providers)
       :ok
   """
-  def get(key) do
-    case get_any_provider() do
-      provider when is_atom(provider) -> get(key, provider)
+  def get(key, opts \\ [])
+
+  def get(key, []) do
+    with provider when is_atom(provider) <- get_any_provider(),
+         value when not is_nil(value) <- get(key, provider: provider) do
+      value
+    else
       _ -> get_default(key)
     end
   end
 
-  @doc """
-  Get secret value with provider name.
+  def get(key, provider: provider, default_value: default_value) do
+    with value when is_nil(value) <- Cache.get(key),
+         fetch <- SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider]),
+         value when not is_nil(value) <- Cache.pass_by(key, fetch) do
+      value
+    else
+      nil -> default_value
+      value -> value
+    end
+  end
 
-  ## Examples
-      iex(1)> Application.put_env(:ex_secrets, :providers, %{dot_env: %{path: "test/support/fixtures/dot_env_test.env"}})
-      :ok
-      iex(2)> ExSecrets.get("DEVS", :dot_env)
-      "ROCKS"
-      iex(4)> Application.delete_env(:ex_secrets, :providers)
-      :ok
-  """
+  def get(key, provider: provider) do
+    with value when is_nil(value) <- Cache.get(key),
+         fetch <- SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider]),
+         value when not is_nil(value) <- Cache.pass_by(key, fetch) do
+      value
+    else
+      nil -> get_default(key)
+      value -> value
+    end
+  end
+
+  def get(key, default_value: default_value) do
+    with value when is_nil(value) <- Cache.get(key),
+         provider <- get_any_provider(),
+         fetch <- SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider]),
+         value when not is_nil(value) <- Cache.pass_by(key, fetch) do
+      value
+    else
+      nil -> default_value
+      value -> value
+    end
+  end
+
   def get(key, provider) do
-    with value when not is_nil(value) <- Cache.get(key) do
+    m = "ExSecrets.get(key, provider) is deprecated. Use ExSecrets.get/2 with options."
+
+    cond do
+      has_fun?(Logger, :warn) -> Logger.warn(m)
+      has_fun?(Logger, :warning) -> Logger.warning(m)
+      true -> :ok
+    end
+
+    with true <- is_atom(provider),
+         value when not is_nil(value) <- Cache.get(key) do
       value
     else
       nil ->
@@ -59,19 +120,11 @@ defmodule ExSecrets do
 
   @doc """
   Get secret value with provider name and default value
-
-  ## Examples
-      iex(1)> Application.put_env(:ex_secrets, :providers, %{dot_env: %{path: "test/support/fixtures/dot_env_test.env"}})
-      :ok
-      iex(2)> ExSecrets.get("ERL", :dot_env)
-      nil
-      iex(3)> ExSecrets.get("ERL", :dot_env, "ANG")
-      "ANG"
-      iex(4)> Application.delete_env(:ex_secrets, :providers)
-      :ok
   """
+  @deprecated "This function is deprecated. Use get/2 instead."
   def get(key, provider, default) do
-    with value when not is_nil(value) <- Cache.get(key) do
+    with true <- is_atom(provider),
+         value when not is_nil(value) <- Cache.get(key) do
       value
     else
       nil ->
@@ -84,7 +137,6 @@ defmodule ExSecrets do
         end
     end
   end
-
 
   @doc """
   Internal function for fetching secret with provide for catching and rate limiting.
@@ -101,12 +153,11 @@ defmodule ExSecrets do
 
   defp get_default(key) do
     with value when is_nil(value) <- Cache.get(key),
-         provider <- get_default_prider() do
-      Cache.pass_by(
-        key,
-        SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider])
-      )
+         provider when provider not in [:system_env] <- get_default_prider(),
+         fetch <- SecretFetchLimiter.allow(key, ExSecrets, :get_using_provider, [key, provider]) do
+      Cache.pass_by(key, fetch)
     else
+      provider when is_atom(provider) -> get_using_provider(key, provider)
       value -> value
     end
   end
@@ -125,12 +176,16 @@ defmodule ExSecrets do
     end
   end
 
-   @doc """
+  @doc """
   Resets cache and reloads all providers.
   """
   def reset() do
-    n = GenServer.call(:ex_secrets_cache_store, :clear)
+    GenServer.call(:ex_secrets_cache_store, :clear)
     ExSecrets.Application.get_providers() |> Enum.each(&Kernel.apply(&1, :reset, []))
-    {:ok, n}
+    :ok
+  end
+
+  defp has_fun?(module, func) do
+    Keyword.has_key?(module.__info__(:functions), func)
   end
 end

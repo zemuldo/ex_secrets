@@ -1,4 +1,7 @@
 defmodule ExSecrets.Utils.Config do
+  @moduledoc """
+  Config module provides helper functions for getting configuration values.
+  """
   def provider_config_value(provider, key) do
     provider
     |> provider_env()

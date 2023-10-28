@@ -1,4 +1,7 @@
 defmodule ExSecrets.Providers.SystemEnv do
+  @moduledoc """
+  SystemEnv provider provides secrets from the system environment.
+  """
   use ExSecrets.Providers.Base
 
   def init(_) do
@@ -11,6 +14,11 @@ defmodule ExSecrets.Providers.SystemEnv do
 
   def get(name) do
     System.get_env(name)
+  end
+
+  def set(name, value) do
+    System.put_env(name, value)
+    {:ok, value}
   end
 
   def process_name() do

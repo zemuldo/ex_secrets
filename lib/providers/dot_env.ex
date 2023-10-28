@@ -16,6 +16,10 @@ defmodule ExSecrets.Providers.DotEnv do
     end
   end
 
+  def set(_name, _value) do
+    {:error, "Not implemented"}
+  end
+
   def init(_) do
     read_env()
     {:ok, %{}}

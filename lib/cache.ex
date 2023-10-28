@@ -1,4 +1,7 @@
 defmodule ExSecrets.Cache do
+  @moduledoc """
+  Cache module provides helper functions for caching secrets.
+  """
   use GenServer
 
   @store_name :ex_secrets_cache_store

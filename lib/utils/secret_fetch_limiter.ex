@@ -1,4 +1,7 @@
 defmodule ExSecrets.Utils.SecretFetchLimiter do
+  @moduledoc """
+  Secret fetch limiter module limits the number of secret fetches in a given time.
+  """
   require Logger
   use GenServer
 
@@ -29,11 +32,14 @@ defmodule ExSecrets.Utils.SecretFetchLimiter do
   end
 
   def allow(key, module, function, args) do
-    case :ets.whereis(@table_name) do
-      :undefined ->
+    case {:ets.whereis(@table_name), args} do
+      {_, [_, :system_env]} ->
         Kernel.apply(module, function, args)
 
-      _ ->
+      {:undefined, _} ->
+        Kernel.apply(module, function, args)
+
+      {_, _} ->
         now = current_time()
 
         @table_name

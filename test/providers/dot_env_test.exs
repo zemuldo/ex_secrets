@@ -7,7 +7,7 @@ defmodule ExSecrets.Providers.DotEnvTest do
     })
 
     {:ok, _} = GenServer.start(ExSecrets.Providers.DotEnv, [])
-    assert ExSecrets.get("JAVA", :dot_env) == "SCRIPT"
+    assert ExSecrets.get("JAVA", provider: :dot_env) == "SCRIPT"
     Application.delete_env(:ex_secrets, :providers)
   end
 
@@ -16,7 +16,7 @@ defmodule ExSecrets.Providers.DotEnvTest do
       dot_env: %{path: "test/support/fixtures/dot_env_test_2.env"}
     })
 
-    assert ExSecrets.get("ASD", :dot_env) == "FGH"
+    assert ExSecrets.get("ASD", provider: :dot_env) == "FGH"
     Application.delete_env(:ex_secrets, :providers)
   end
 
@@ -26,7 +26,7 @@ defmodule ExSecrets.Providers.DotEnvTest do
     })
 
     {:ok, _} = GenServer.start(ExSecrets.Providers.DotEnv, [])
-    assert ExSecrets.get("JAVA", :dot_env) == "SCRIPT"
+    assert ExSecrets.get("JAVA", provider: :dot_env) == "SCRIPT"
 
     Application.put_env(:ex_secrets, :providers, %{
       dot_env: %{path: "test/support/fixtures/dot_env_test_3.env"}
@@ -34,7 +34,7 @@ defmodule ExSecrets.Providers.DotEnvTest do
 
     ExSecrets.Providers.DotEnv.reset()
 
-    assert ExSecrets.get("JAVA", :dot_env) == "SCRIPTT"
+    assert ExSecrets.get("JAVA", provider: :dot_env) == "SCRIPTT"
 
     Application.put_env(:ex_secrets, :providers, %{
       dot_env: %{path: "test/support/fixtures/dot_env_test.env"}

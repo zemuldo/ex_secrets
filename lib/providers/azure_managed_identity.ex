@@ -50,6 +50,10 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
     end
   end
 
+  def set(_name, _value) do
+    {:error, "Not implemented"}
+  end
+
   def handle_call({:get, name}, _from, state) do
     case get_secret(name, state, get_current_epoch()) do
       {:ok, secret, state} -> {:reply, secret, state}
@@ -69,7 +73,8 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
          current_time
        )
        when issued_at + expires_in - current_time > 5 do
-    with {:ok, value} <- get_secret_call(name, access_token) do
+    with {:ok, value} <- get_secret_call(name, access_token),
+         true <- is_binary(value) do
       {:ok, value, state}
     else
       _ -> {:error, "Failed to get secret"}

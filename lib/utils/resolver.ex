@@ -1,4 +1,7 @@
 defmodule ExSecrets.Utils.Resolver do
+  @moduledoc """
+  Resolver module resolves the provider name to the actual provider module.
+  """
   def call(:system_env), do: ExSecrets.Providers.SystemEnv
   def call(:dot_env), do: ExSecrets.Providers.DotEnv
   def call(:azure_managed_identity), do: ExSecrets.Providers.AzureManagedIdentity
