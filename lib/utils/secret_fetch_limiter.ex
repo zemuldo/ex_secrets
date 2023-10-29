@@ -98,14 +98,20 @@ defmodule ExSecrets.Utils.SecretFetchLimiter do
         Kernel.apply(module, function, args)
 
       :warn ->
-        Logger.warn("Fetch secret #{key} reached limit #{limit}")
+        IO.puts(
+          "#{IO.ANSI.yellow()}ExSecrets Warning ==> #{NaiveDateTime.utc_now()} ==> Fetch secret #{key} reached limit #{limit}"
+        )
+
         Kernel.apply(module, function, args)
 
       :raise ->
         raise "Fetch secret #{key} reached limit #{limit}"
 
       _ ->
-        Logger.error("Fetch secret #{key} reached limit #{limit}")
+        IO.puts(
+          "#{IO.ANSI.red()}ExSecrets Warning ==> #{NaiveDateTime.utc_now()} ==> Fetch secret #{key} reached limit #{limit}"
+        )
+
         Kernel.apply(module, function, args)
     end
   end

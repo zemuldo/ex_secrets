@@ -101,11 +101,7 @@ defmodule ExSecrets do
   def get(key, provider) do
     m = "ExSecrets.get(key, provider) is deprecated. Use ExSecrets.get/2 with options."
 
-    cond do
-      has_fun?(Logger, :warn) -> Logger.warn(m)
-      has_fun?(Logger, :warning) -> Logger.warning(m)
-      true -> :ok
-    end
+    IO.puts("#{IO.ANSI.yellow()}ExSecrets Warning ==> #{NaiveDateTime.utc_now()} ==> #{m}")
 
     get(key, provider: provider)
   end
@@ -207,9 +203,5 @@ defmodule ExSecrets do
     GenServer.call(:ex_secrets_cache_store, :clear)
     ExSecrets.Application.get_providers() |> Enum.each(&Kernel.apply(&1, :reset, []))
     :ok
-  end
-
-  defp has_fun?(module, func) do
-    Keyword.has_key?(module.__info__(:functions), func)
   end
 end
