@@ -16,6 +16,8 @@ end
 
 ## Basic Usage
 
+### Get a secret
+
 Secrets are first fetched using system environment. If found thats the value that is used. For this, no configuration is required.
 
 ```elixir
@@ -42,6 +44,15 @@ iex(4)> System.put_env "FOO", "BAR"
 iex(5)> ExSecrets.get("FOO")
 nil
 iex(7)>
+```
+
+### Se Secret
+
+You can set a new secret version using:
+
+```elixir
+iex(20)> ExSecrets.set("TEST", "test", provider: :azure_key_vault)
+:ok
 ```
 
 ## Supported Providers

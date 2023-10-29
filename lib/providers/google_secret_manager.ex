@@ -212,10 +212,15 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
     url =
       "https://secretmanager.googleapis.com/v1/projects/#{cred["project_id"]}/secrets/#{name}:addVersion"
 
-    client.post(url, Poison.encode!(payload), %{
-      "Authorization" => "Bearer #{access_token}",
-      "content-type" => "application/json"
-    })
+    client.post(
+      url,
+      Poison.encode!(payload),
+      %{
+        "Authorization" => "Bearer #{access_token}",
+        "content-type" => "application/json"
+      },
+      timeout: 30_000
+    )
   end
 
   defp get_access_token(cred) do
