@@ -134,7 +134,7 @@ defmodule ExSecrets do
   Calling this function requires the provider to be configured with credentials that allow create secrets like Secret Admionistrator in Azure Key Vault.
   """
 
-  @spec set(Atom.t(), String.t(), String.t()) :: :ok | :error
+  @spec set(atom(), String.t(), String.t()) :: :ok | :error
   def set(provider, key, value) do
     with provider when is_atom(provider) <- Resolver.call(provider),
          :ok <- Kernel.apply(provider, :set, [key, value]) do
