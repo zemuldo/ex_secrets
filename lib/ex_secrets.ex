@@ -52,6 +52,7 @@ defmodule ExSecrets do
       iex> Application.delete_env(:ex_secrets, :providers)
       :ok
   """
+  @spec get(String.t(), provider: atom(), default_value: any()) :: String.t() | nil
   def get(key, opts \\ [])
 
   def get(key, []) do
@@ -120,13 +121,26 @@ defmodule ExSecrets do
     end
   end
 
+  @doc """
+  Set secret value.
+
+  Supported for providers:
+
+  - :system_env
+  - :azure_key_vault
+  - :azure_managed_identity
+  - :google_secret_manager
+
+  Calling this function requires the provider to be configured with credentials that allow create secrets like Secret Admionistrator in Azure Key Vault.
+  """
+
+  @spec set(Atom.t(), String.t(), String.t()) :: :ok | :error
   def set(provider, key, value) do
-    with provider when is_atom(provider) <- Resolver.call(provider) do
-      Kernel.apply(provider, :set, [key, value])
+    with provider when is_atom(provider) <- Resolver.call(provider),
+         :ok <- Kernel.apply(provider, :set, [key, value]) do
       Cache.save(key, value)
     else
-      {:error, message} -> {:error, message}
-      _ -> {:error, :provider_not_found}
+      _ -> :error
     end
   end
 

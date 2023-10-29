@@ -59,11 +59,11 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
     else
       nil ->
         case set_secret(name, value, %{}, nil) do
-          {:ok, value, _} ->
-            value
+          {:ok, _value, _} ->
+            :ok
 
           _ ->
-            {:error, "Could not set secret, check credentials and permissions"}
+            :error
         end
     end
   end
@@ -77,8 +77,8 @@ defmodule ExSecrets.Providers.AzureManagedIdentity do
 
   def handle_call({:set, name, value}, _from, state) do
     case set_secret(name, value, state, get_current_epoch()) do
-      {:ok, secret, state} -> {:reply, secret, state}
-      _ -> {:reply, nil, state}
+      {:ok, _secret, state} -> {:reply, :ok, state}
+      _ -> {:reply, :error, state}
     end
   end
 

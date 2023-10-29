@@ -74,14 +74,35 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
     end
   end
 
-  def set(_name, _value) do
-    {:error, "Not implemented"}
+  def set(name, value) do
+    name = name |> String.split("_") |> Enum.join("-")
+
+    with process when not is_nil(process) <-
+           GenServer.whereis(@process_name) do
+      GenServer.call(@process_name, {:set, name, value})
+    else
+      nil ->
+        case set_secret(name, value, %{}, nil) do
+          {:ok, _value, _} ->
+            :ok
+
+          _ ->
+            :error
+        end
+    end
   end
 
   def handle_call({:get, name}, _from, state) do
     case get_secret(name, state, get_current_epoch()) do
       {:ok, secret, state} -> {:reply, secret, state}
       _ -> {:reply, nil, state}
+    end
+  end
+
+  def handle_call({:set, name, value}, _from, state) do
+    case set_secret(name, value, state, get_current_epoch()) do
+      {:ok, _secret, state} -> {:reply, :ok, state}
+      _ -> {:reply, :error, state}
     end
   end
 
@@ -110,6 +131,32 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
     end
   end
 
+  defp set_secret(
+         name,
+         value,
+         %{"access_token" => access_token, "issued_at" => issued_at, "expires_in" => expires_in} =
+           state,
+         current_time
+       )
+       when issued_at + expires_in - current_time > 5 do
+    with {:ok, value} <- set_secret_call(name, value, access_token, state.cred),
+         true <- is_binary(value) do
+      {:ok, value, state}
+    else
+      _ -> {:error, "Failed to get secret"}
+    end
+  end
+
+  defp set_secret(name, value, state, _) do
+    with {:ok, cred} <- get_service_account_credentials(),
+         {:ok, %{"access_token" => access_token} = new_state} <- get_access_token(cred),
+         {:ok, value} <- set_secret_call(name, value, access_token, cred) do
+      {:ok, value, state |> Map.merge(new_state)}
+    else
+      _ -> {:error, "Failed to get secret"}
+    end
+  end
+
   defp get_secret_call(name, access_token, cred) do
     client = http_adpater()
 
@@ -125,6 +172,50 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
     else
       _ -> {:error, "Failed to get secret"}
     end
+  end
+
+  defp set_secret_call(name, value, access_token, cred) do
+    client = http_adpater()
+
+    payload = %{
+      name: "projects/#{cred["project_id"]}/secrets/#{name}",
+      replication: %{
+        automatic: %{}
+      }
+    }
+
+    url =
+      "https://secretmanager.googleapis.com/v1/projects/#{cred["project_id"]}/secrets?secretId=#{name}"
+
+    with {:ok, %{status_code: status}} when status in [200, 409] <-
+           client.post(url, Poison.encode!(payload), %{
+             "Authorization" => "Bearer #{access_token}",
+             "content-type" => "application/json"
+           }),
+         {:ok, %{status_code: 200}} <- set_secret_version_call(name, value, access_token, cred) do
+      {:ok, value}
+    else
+      _ ->
+        {:error, "Failed to create secret"}
+    end
+  end
+
+  defp set_secret_version_call(name, value, access_token, cred) do
+    client = http_adpater()
+
+    payload = %{
+      payload: %{
+        data: Base.encode64(value)
+      }
+    }
+
+    url =
+      "https://secretmanager.googleapis.com/v1/projects/#{cred["project_id"]}/secrets/#{name}:addVersion"
+
+    client.post(url, Poison.encode!(payload), %{
+      "Authorization" => "Bearer #{access_token}",
+      "content-type" => "application/json"
+    })
   end
 
   defp get_access_token(cred) do
