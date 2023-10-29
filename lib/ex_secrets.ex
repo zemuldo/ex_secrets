@@ -127,11 +127,24 @@ defmodule ExSecrets do
   Supported for providers:
 
   - :system_env
+  - :dot_env
   - :azure_key_vault
   - :azure_managed_identity
   - :google_secret_manager
 
   Calling this function requires the provider to be configured with credentials that allow create secrets like Secret Admionistrator in Azure Key Vault.
+
+  ## Examples
+
+      iex> File.touch(".env.dev")
+      :ok
+      iex> Application.put_env(:ex_secrets, :providers, %{dot_env: %{path: ".env.dev"}})
+      :ok
+      iex> ExSecrets.set("TEST", "test", provider: :dot_env)
+      :ok
+      iex> Application.delete_env(:ex_secrets, :providers)
+      :ok
+      iex> File.rm(".env.dev")
   """
 
   @spec set(String.t(), String.t(), Keyword.t()) :: :ok | :error

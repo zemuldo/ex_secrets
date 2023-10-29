@@ -18,7 +18,6 @@ defmodule ExSecrets.Providers.SystemEnv do
 
   def set(name, value) do
     System.put_env(name, value)
-    {:ok, value}
   end
 
   def process_name() do

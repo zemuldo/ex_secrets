@@ -16,8 +16,17 @@ defmodule ExSecrets.Providers.DotEnv do
     end
   end
 
-  def set(_name, _value) do
-    {:error, "Not implemented"}
+  def set(name, value) do
+    path = Config.provider_config_value(:dot_env, :path)
+
+    with existing when is_nil(existing) <- get(name),
+         true <- is_binary(path),
+         :ok <- File.write(path, "#{name}=#{value}\n", [:append]) do
+      Cache.save(name, value)
+      :ok
+    else
+      _ -> {:error, "Failed to write to #{path}"}
+    end
   end
 
   def init(_) do
