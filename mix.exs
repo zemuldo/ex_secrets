@@ -4,19 +4,14 @@ defmodule ExSecrets.MixProject do
   def project do
     [
       app: :ex_secrets,
-      version: "0.3.1",
+      version: "0.3.2",
       elixir: "~> 1.13",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
       deps: deps(),
-      docs: [
-        # The main page in the docs
-        main: "readme",
-        logo: "logo.png",
-        extras: ["README.md", "GUIDES.md", "CHANGELOG.md", "LICENSE"]
-      ]
+      docs: docs()
     ]
   end
 
@@ -61,6 +56,16 @@ defmodule ExSecrets.MixProject do
       files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/zemuldo/ex_secrets"}
+    ]
+  end
+
+  defp docs() do
+    [
+      source_url: "https://github.com/zemuldo/ex_secrets",
+      source_ref: "main",
+      main: "readme",
+      logo: "logo.png",
+      extras: ["README.md", "GUIDES.md", "CHANGELOG.md", "LICENSE"]
     ]
   end
 end

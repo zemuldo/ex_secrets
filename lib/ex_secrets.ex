@@ -12,8 +12,8 @@ defmodule ExSecrets do
   @doc """
   Get secret value.
   You can pass two options:
-  - provider: Name of the provider to use. Default is :system_env
-  - default_value: Default value to return if secret is not found. Default is nil
+    - provider: Name of the provider to use. Default is :system_env
+    - default_value: Default value to return if secret is not found. Default is nil
 
   ## Examples
 
@@ -109,7 +109,7 @@ defmodule ExSecrets do
   @doc """
   Get secret value with provider name and default value
   """
-  @deprecated "This function is deprecated. Use get/2 instead."
+  @deprecated "Use get/2 instead."
   def get(key, provider, default) do
     case get(key, provider: provider) do
       nil -> default
