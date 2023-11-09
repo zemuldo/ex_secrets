@@ -9,7 +9,7 @@ Install by adding `ex_secrets` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ex_secrets, "~> 0.1.0"}
+    {:ex_secrets, "~> 0.3.0"}
   ]
 end
 ```
