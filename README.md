@@ -14,7 +14,22 @@ def deps do
 end
 ```
 
-## Basic Usage
+## How it works
+
+This library loads secrets on demand from APIs or files. For dotenv file, it is loaded at startup and saved in the cache.
+Secrets are encrypted when store in the cache with a master key generated at startup. Enables developers to access keys securely.
+
+Key features include:
+
+- FETCH and SET secrets.
+- Key fetch throttling.
+- Authentications with providers like Azure Keyvault and Google Secrets manager and token renewals.
+- Catching of secrets.
+- Default key options.
+- You can configure multiple secrets and access from different providers.
+- RESET and RELOAD secrets without shutting down your application.
+
+## Usage
 
 ### Get a secret
 
@@ -46,12 +61,21 @@ nil
 iex(7)>
 ```
 
-### Se Secret
+### Set Secret
 
 You can set a new secret version using:
 
 ```elixir
 iex(20)> ExSecrets.set("TEST", "test", provider: :azure_key_vault)
+:ok
+```
+
+### Reset and Reload
+
+To reset the secrets and reload, this will clear the cached values and reload doenv. For other providers, values will be fetched on demand.
+
+```elixir
+iex(20)> ExSecrets.reset()
 :ok
 ```
 
