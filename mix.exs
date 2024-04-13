@@ -30,6 +30,7 @@ defmodule ExSecrets.MixProject do
       {:httpoison, "~> 1.8"},
       {:poison, "~> 3.1"},
       {:joken, "~> 2.6"},
+      {:crc32cer, "~> 0.1.10"},
 
       # Testing and Documentation
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},

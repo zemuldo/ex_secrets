@@ -35,6 +35,11 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
       }
     })
   ```
+
+  CRC32C Verification
+
+  When google returns the CRC32C value, the provider will verify the value with the data returned from the API. If the values do not match, the provider will return an error.
+  The provider uses the crc32cer library https://hex.pm/packages/crc32cer to verify the CRC32C value.
   """
 
   use ExSecrets.Providers.Base
@@ -167,8 +172,10 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
 
     with {:ok, %{body: body, status_code: 200}} <-
            client.get(url, %{"Authorization" => "Bearer #{access_token}"}),
-         {:ok, %{"payload" => %{"data" => data}}} <- Poison.decode(body) do
-      {:ok, Base.decode64!(data)}
+         {:ok, %{"payload" => %{"data" => data} = payload}} <- Poison.decode(body),
+         {:ok, value} <- Base.decode64(data),
+         true <- verify_crc32c(value, payload["dataCrc32c"]) do
+      {:ok, value}
     else
       _ -> {:error, "Failed to get secret"}
     end
@@ -297,4 +304,8 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   def process_name() do
     @process_name
   end
+
+  defp verify_crc32c(_, nil), do: true
+
+  defp verify_crc32c(data, crc32c), do: crc32c == "#{:crc32cer.nif(data)}"
 end
