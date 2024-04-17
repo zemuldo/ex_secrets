@@ -1,5 +1,5 @@
 defmodule ExSecrets.AwsSecretsManager.Credentials do
-   @moduledoc false
+  @moduledoc false
 
   import ExSecrets.AwsSecretsManager.Auth.Utils, only: [date: 1]
 

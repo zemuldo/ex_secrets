@@ -1,6 +1,6 @@
 defmodule ExSecrets.AwsSecretsManager.Auth.Utils do
   @moduledoc false
-alias ExSecrets.AwsSecretsManager.Request.Url
+  alias ExSecrets.AwsSecretsManager.Request.Url
 
   def uri_encode(url), do: Url.uri_encode(url)
 
@@ -9,6 +9,7 @@ alias ExSecrets.AwsSecretsManager.Request.Url
     |> :crypto.hash(data)
     |> bytes_to_hex
   end
+
   Code.ensure_loaded?(:crypto) || IO.warn(":crypto module failed to load")
 
   case function_exported?(:crypto, :mac, 4) do

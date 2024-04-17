@@ -6,7 +6,6 @@ defmodule ExSecrets.Providers.AwsSecretsManager do
   """
 
   @process_name :ex_secrets_aws_secrets_manager
-  @url "https://secretsmanager.us-east-1.amazonaws.com/"
 
   def reset() do
     :ok
@@ -17,7 +16,7 @@ defmodule ExSecrets.Providers.AwsSecretsManager do
   end
 
   def set(_, _) do
-    :ok
+    {:error, "set is not supported for AWS Secrets Manager"}
   end
 
   def get(name) do
@@ -36,19 +35,9 @@ defmodule ExSecrets.Providers.AwsSecretsManager do
   end
 
   def get_secret(name, %{}, _) do
-    with {:ok, %{body: body, status_code: status_code}} <-
-           Utils.AwsRequestBuilder.do_request(
-             Utils.AwsRequestBuilder.config(),
-             :post,
-            @url,
-             Utils.AwsRequestBuilder.body(name),
-             Utils.AwsRequestBuilder.headers(name),
-             1,
-             :secretsmanager
-           ),
-         true <- status_code in [200, 201],
-         {:ok, data} <- Jason.decode(body) do
-      {:ok, data |> Map.get("SecretString") |> get_value(), %{}}
+    with {:ok, secret} <- Utils.AwsRequest.call(name),
+         value <- get_value(secret) do
+      {:ok, value, %{}}
     else
       _err ->
         nil
