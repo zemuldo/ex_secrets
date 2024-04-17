@@ -87,6 +87,7 @@ You can configure:
 - Azure Keyvault
 - Azure Managed Identity
 - Google Secret Manager
+- AWS Secret Manager
 
 ## Provider Config
 
@@ -152,6 +153,19 @@ Using certificate. You can use `client_certificate_path` or `client_certificate_
     }
   }
 ```
+
+AWS Secret Manager:
+
+Using secret access key. Using instance role is coming soon.
+
+  ```elixir
+  config :ex_secrets, :providers, %{
+        aws_secrets_manager: %{
+          access_key_id: "taccess_key_id",
+          secret_access_key: "secret_access_key"
+        }
+  }
+  ```
 
   Dotenv file:
 

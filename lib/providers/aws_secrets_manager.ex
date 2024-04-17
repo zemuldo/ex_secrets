@@ -2,7 +2,22 @@ defmodule ExSecrets.Providers.AwsSecretsManager do
   use ExSecrets.Providers.Base
 
   @moduledoc """
-  This module functions to access secrets in an Elixir application.
+  This module provides a provider for AWS Secrets Manager - https://aws.amazon.com/secrets-manager/
+  Code for authenticating with AWS has been has been forked from ex_aws See https://github.com/ex-aws/ex_aws
+
+  ## Configuration
+
+  ```elixir
+  config :ex_secrets, :providers, %{
+        aws_secrets_manager: %{
+          access_key_id: "taccess_key_id",
+          secret_access_key: "secret_access_key"
+        }
+      }
+  ```
+
+  Its is recomended to create an access key and secret access key for the access key with only the required permissions.
+  Limiting thye scope of the access key will help in reducing the risk of the access key being compromised.
   """
 
   @process_name :ex_secrets_aws_secrets_manager
