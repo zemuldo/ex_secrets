@@ -1,4 +1,5 @@
 defmodule Utils.AwsRequest do
+  @moduledoc false
   alias ExSecrets.Utils.Config
 
   @url "https://secretsmanager.us-east-1.amazonaws.com/"

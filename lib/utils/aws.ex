@@ -170,8 +170,7 @@ defmodule Utils.Aws do
 
     header_string =
       headers
-      |> Enum.map(fn {k, v} -> "#{k}:#{remove_dup_spaces(to_string(v))}" end)
-      |> Enum.join("\n")
+      |> Enum.map_join(fn {k, v} -> "#{k}:#{remove_dup_spaces(to_string(v))}" end, "\n")
 
     signed_headers_list = signed_headers_value(headers)
 
@@ -293,8 +292,7 @@ defmodule Utils.Aws do
 
   defp signed_headers_value(headers) do
     headers
-    |> Enum.map(&elem(&1, 0))
-    |> Enum.join(";")
+    |> Enum.map_join(&elem(&1, 0), ";")
   end
 
   defp service_override(service, config) do

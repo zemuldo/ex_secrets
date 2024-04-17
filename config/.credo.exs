@@ -12,7 +12,8 @@
       parse_timeout: 5000,
       color: true,
       checks: [
-        {Credo.Check.Readability.WithSingleClause, false}
+        {Credo.Check.Readability.WithSingleClause, false},
+        {Credo.Check.Refactor.FunctionArity, false}
       ]
     }
   ]
