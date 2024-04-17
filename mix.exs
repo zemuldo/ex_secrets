@@ -26,6 +26,7 @@ defmodule ExSecrets.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:telemetry, "~> 0.4.3 or ~> 1.0"},
       # Dependecies.
       {:httpoison, "~> 1.8"},
       {:poison, "~> 3.1"},
