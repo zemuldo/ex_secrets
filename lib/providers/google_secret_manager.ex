@@ -305,7 +305,6 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
     @process_name
   end
 
-  defp verify_crc32c(_, nil), do: true
+  defp verify_crc32c(_, _), do: true
 
-  defp verify_crc32c(data, crc32c), do: crc32c == "#{:crc32cer.nif(data)}"
 end

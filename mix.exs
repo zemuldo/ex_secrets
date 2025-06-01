@@ -4,7 +4,7 @@ defmodule ExSecrets.MixProject do
   def project do
     [
       app: :ex_secrets,
-      version: "0.3.5",
+      version: "0.3.6",
       elixir: "~> 1.13",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -31,7 +31,6 @@ defmodule ExSecrets.MixProject do
       {:httpoison, "~> 1.8"},
       {:poison, "~> 3.1"},
       {:joken, "~> 2.6"},
-      {:crc32cer, "~> 0.1.10"},
 
       # Testing and Documentation
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
