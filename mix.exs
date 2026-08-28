@@ -4,7 +4,7 @@ defmodule ExSecrets.MixProject do
   def project do
     [
       app: :ex_secrets,
-      version: "0.3.6",
+      version: "0.4.0",
       elixir: "~> 1.13",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -28,7 +28,16 @@ defmodule ExSecrets.MixProject do
     [
       {:telemetry, "~> 0.4.3 or ~> 1.0"},
       # Dependecies.
-      {:httpoison, "~> 1.8"},
+      # Widened rather than moved: HTTPoison 3.0 is the first release to require
+      # hackney 4.x, and hackney 1.x carries four open advisories (SSRF allowlist
+      # bypass, CR/LF injection, a missing TLS handshake timeout). Pinning 1.8
+      # held every consumer of this library on the vulnerable line.
+      #
+      # The range spans all three majors because the surface used here —
+      # `HTTPoison.get/3`, `post/4`, and `%HTTPoison.Response{}` — is unchanged
+      # across them, and callers already swap the client wholesale via
+      # `config :ex_secrets, :http_adapter`.
+      {:httpoison, "~> 1.8 or ~> 2.0 or ~> 3.0"},
       {:poison, "~> 3.1"},
       {:joken, "~> 2.6"},
 

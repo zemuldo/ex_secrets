@@ -48,7 +48,7 @@ defmodule ExSecrets.Providers.DotEnv do
          [_ | _] = envs <- String.split(s, ~r{(\r\n|\r|\n|\\n)}, trim: true) do
       Enum.each(envs, &put_env/1)
     else
-      _ -> raise(raise(ExSecrets.Exceptions.InvalidConfiguration, ".env is not found"))
+      _ -> raise(ExSecrets.Exceptions.InvalidConfiguration, ".env is not found")
     end
   end
 
