@@ -35,7 +35,7 @@ jobs:
             unlock: true
     name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}${{ matrix.unlock && ' (HTTPoison 1.x)' || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: erlef/setup-beam@v1
         with:
@@ -43,7 +43,7 @@ jobs:
           elixir-version: ${{ matrix.elixir }}
 
       - name: Restore deps and build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             deps
