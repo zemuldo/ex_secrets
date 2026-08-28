@@ -306,5 +306,4 @@ defmodule ExSecrets.Providers.GoogleSecretManager do
   end
 
   defp verify_crc32c(_, _), do: true
-
 end

@@ -59,7 +59,7 @@ defmodule ExSecrets.Providers.DotEnv do
          true <- File.exists?(path),
          {:ok, s} <- File.read(path),
          [_ | _] = envs <- String.split(s, ~r{(\r\n|\r|\n|\\n)}, trim: true) do
-      Enum.find(envs, &(get_k_v(&1) |> is_value(key))) |> get_v()
+      Enum.find(envs, &(get_k_v(&1) |> matches_key?(key))) |> get_v()
     else
       _ -> nil
     end
@@ -87,7 +87,7 @@ defmodule ExSecrets.Providers.DotEnv do
     {k, v}
   end
 
-  defp is_value({k, _v}, key), do: k == key
+  defp matches_key?({k, _v}, key), do: k == key
 
   def process_name() do
     :ex_secrets_dot_env
