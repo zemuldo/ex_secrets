@@ -14,13 +14,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # hackney 4.x requires OTP 27+ and HTTPoison 3.x requires Elixir 1.17+,
-          # so those are the floor for a fresh dependency resolution.
-          - elixir: "1.17.3"
-            otp: "27.2"
-          - elixir: "1.18.4"
-            otp: "27.3.4"
-    name: Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }}
+          # Current dependency resolution (mix.lock): hackney 4.x needs OTP 27+
+          # and HTTPoison 3.x needs Elixir 1.17+, so 27 / 1.17 is the floor here.
+          - otp: "27.3.4"
+            elixir: "1.17.3"
+          - otp: "27.3.4"
+            elixir: "1.18.4"
+            check: true
+          - otp: "28.5"
+            elixir: "1.18.4"
+          - otp: "28.5"
+            elixir: "1.19.5"
+          - otp: "29.0.5"
+            elixir: "1.20.3"
+          # OTP 26 predates hackney 4.x. Resolving without the lockfile picks the
+          # older HTTPoison/hackney line, which is what consumers still on the
+          # declared `elixir: "~> 1.13"` floor actually get.
+          - otp: "26.2.5.21"
+            elixir: "1.17.3"
+            unlock: true
+    name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}${{ matrix.unlock && ' (HTTPoison 1.x)' || '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,12 +49,25 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ matrix.unlock && 'httpoison1' || hashFiles('mix.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
 
       - run: printf 'JAVA=SCRIPT\nER=LANG\n' > .env
 
+      # hackney 4.x does not build on OTP 26, and the resolver has no way to
+      # know that, so pin the old client explicitly for this leg.
+      - name: Resolve the legacy HTTPoison 1.x line
+        if: matrix.unlock
+        run: |
+          rm -f mix.lock
+          sed -i 's/{:httpoison, "~> 1.8 or ~> 2.0 or ~> 3.0"}/{:httpoison, "~> 1.8"}/' mix.exs
+
       - run: mix deps.get
+
+      # Formatting, Credo, Sobelow and docs are version-independent, so they run
+      # once on the primary pair rather than on every leg of the matrix.
       - run: mix check
+        if: matrix.check
+
       - run: mix test
