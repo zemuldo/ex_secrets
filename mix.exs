@@ -4,7 +4,7 @@ defmodule ExSecrets.MixProject do
   def project do
     [
       app: :ex_secrets,
-      version: "0.3.5",
+      version: "0.4.0",
       elixir: "~> 1.13",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -28,19 +28,27 @@ defmodule ExSecrets.MixProject do
     [
       {:telemetry, "~> 0.4.3 or ~> 1.0"},
       # Dependecies.
-      {:httpoison, "~> 1.8"},
-      {:poison, "~> 3.1"},
+      # Widened rather than moved: HTTPoison 3.0 is the first release to require
+      # hackney 4.x, and hackney 1.x carries four open advisories (SSRF allowlist
+      # bypass, CR/LF injection, a missing TLS handshake timeout). Pinning 1.8
+      # held every consumer of this library on the vulnerable line.
+      #
+      # The range spans all three majors because the surface used here —
+      # `HTTPoison.get/3`, `post/4`, and `%HTTPoison.Response{}` — is unchanged
+      # across them, and callers already swap the client wholesale via
+      # `config :ex_secrets, :http_adapter`.
+      {:httpoison, "~> 1.8 or ~> 2.0 or ~> 3.0"},
+      {:poison, "~> 3.1 or ~> 4.0 or ~> 5.0 or ~> 6.0"},
       {:joken, "~> 2.6"},
-      {:crc32cer, "~> 0.1.10"},
 
       # Testing and Documentation
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:mox, "~> 1.0", only: :test},
-      {:ex_doc, "~> 0.14", only: [:dev, :test], runtime: false},
-      {:ex_check, "~> 0.14.0", only: [:dev, :test], runtime: false},
-      {:doctor, "~> 0.21.0", only: [:dev, :test]},
+      {:mox, "~> 1.2", only: :test},
+      {:ex_doc, "~> 0.34", only: [:dev, :test], runtime: false},
+      {:ex_check, "~> 0.16", only: [:dev, :test], runtime: false},
+      {:doctor, "~> 0.23", only: [:dev, :test]},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:sobelow, "~> 0.11.1", only: [:dev, :test]},
+      {:sobelow, "~> 0.15", only: [:dev, :test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
