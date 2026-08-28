@@ -38,17 +38,17 @@ defmodule ExSecrets.MixProject do
       # across them, and callers already swap the client wholesale via
       # `config :ex_secrets, :http_adapter`.
       {:httpoison, "~> 1.8 or ~> 2.0 or ~> 3.0"},
-      {:poison, "~> 3.1"},
+      {:poison, "~> 3.1 or ~> 4.0 or ~> 5.0 or ~> 6.0"},
       {:joken, "~> 2.6"},
 
       # Testing and Documentation
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:mox, "~> 1.0", only: :test},
-      {:ex_doc, "~> 0.14", only: [:dev, :test], runtime: false},
-      {:ex_check, "~> 0.14.0", only: [:dev, :test], runtime: false},
-      {:doctor, "~> 0.21.0", only: [:dev, :test]},
+      {:mox, "~> 1.2", only: :test},
+      {:ex_doc, "~> 0.34", only: [:dev, :test], runtime: false},
+      {:ex_check, "~> 0.16", only: [:dev, :test], runtime: false},
+      {:doctor, "~> 0.23", only: [:dev, :test]},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:sobelow, "~> 0.11.1", only: [:dev, :test]},
+      {:sobelow, "~> 0.15", only: [:dev, :test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
